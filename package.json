@@ -1,0 +1,16 @@
+{
+  "name": "crypto-accumulation-analyzer",
+  "version": "1.0.0",
+  "description": "Crypto Accumulation Detection Platform",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
+

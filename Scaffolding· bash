@@ -1,0 +1,67 @@
+# Repository Scaffolding for Crypto-Accumulation-Analyzer
+
+# 1. Create root project folder
+tree -a
+
+# Directory Structure
+crypto-accumulation-analyzer/
+├── backend/
+│   ├── src/
+│   │   ├── modules/
+│   │   ├── common/
+│   │   ├── config/
+│   │   └── main.ts
+│   ├── test/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── nest-cli.json
+│   └── .env.example
+│
+├── frontend/
+│   ├── app/
+│   │   ├── (dashboard)/
+│   │   ├── api/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   ├── lib/
+│   ├── public/
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── next.config.js
+│   └── .env.example
+│
+├── docs/
+│   └── ROADMAP_EN.md
+│
+├── docker-compose.yml
+├── README.md
+└── .gitignore
+
+# Commands to Initialize the Repo (Run Manually)
+
+mkdir crypto-accumulation-analyzer
+cd crypto-accumulation-analyzer
+
+# Backend Setup
+mkdir backend && cd backend
+pnpm init -y
+pnpm install @nestjs/core @nestjs/common @nestjs/platform-express
+pnpm install -D typescript ts-node @types/node
+nest new .
+pnpm install @prisma/client
+pnpm install -D prisma
+npx prisma init
+cd ..
+
+# Frontend Setup
+mkdir frontend && cd frontend
+pnpm create next-app@latest . --ts --tailwind --app --eslint
+cd ..
+
+# Git Init
+git init
+
+# Final Output Ready
