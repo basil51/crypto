@@ -1,0 +1,331 @@
+// Prisma Schema for Crypto Accumulation Detection Platform
+// Based on Roadmap.md Section 4: Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Seed configuration
+// Run with: pnpm db:seed
+
+// 1. Users table
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  role              UserRole  @default(USER)
+  plan              PlanType  @default(FREE)
+  stripeCustomerId String?   @map("stripe_customer_id")
+  stripeSubscriptionId String? @map("stripe_subscription_id")
+  subscriptionStatus String? @map("subscription_status") // active, canceled, past_due, etc.
+  subscriptionEndsAt DateTime? @map("subscription_ends_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  alerts Alert[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
+// 2. Tokens table
+model Token {
+  id             String   @id @default(uuid())
+  chain           String   // e.g., ethereum, bsc
+  symbol          String
+  name            String
+  contractAddress String   @map("contract_address")
+  decimals        Int
+  metadata        Json?    // JSONB for flexible fields
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  walletPositions    WalletPosition[]
+  transactions       Transaction[]
+  accumulationSignals AccumulationSignal[]
+  whaleEvents        WhaleEvent[]
+  exchangeFlows      ExchangeFlow[]
+  dexSwapEvents      DexSwapEvent[]
+  tokenMetrics       TokenMetrics[]
+
+  @@index([chain, active])
+  @@map("tokens")
+}
+
+// 3. Wallets table
+model Wallet {
+  id        String   @id @default(uuid())
+  address   String   @unique
+  label     String?
+  tracked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  walletPositions WalletPosition[]
+  transactionsFrom Transaction[] @relation("FromWallet")
+  transactionsTo   Transaction[] @relation("ToWallet")
+  whaleEvents     WhaleEvent[]
+
+  @@index([address])
+  @@map("wallets")
+}
+
+// 4. Wallet Positions table (materialized snapshots per window)
+model WalletPosition {
+  id           String   @id @default(uuid())
+  walletId     String   @map("wallet_id")
+  tokenId      String   @map("token_id")
+  balance      Decimal  @db.Decimal(78, 0) // Large precision for crypto amounts
+  lastUpdatedAt DateTime @default(now()) @map("last_updated_at")
+
+  // Relations
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  token  Token  @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@unique([walletId, tokenId])
+  @@index([walletId, tokenId])
+  @@index([tokenId])
+  @@map("wallet_positions")
+}
+
+// 5. Transactions table
+model Transaction {
+  id          String   @id @default(uuid())
+  txHash      String   @map("tx_hash")
+  fromAddress String   @map("from_address")
+  toAddress   String   @map("to_address")
+  tokenId     String   @map("token_id")
+  amount      Decimal  @db.Decimal(78, 0)
+  blockNumber BigInt   @map("block_number")
+  timestamp   DateTime
+  raw         Json?    // JSONB for raw provider payloads
+
+  // Relations
+  token       Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  fromWallet  Wallet?  @relation("FromWallet", fields: [fromAddress], references: [address])
+  toWallet    Wallet?  @relation("ToWallet", fields: [toAddress], references: [address])
+
+  @@unique([txHash, tokenId])
+  @@index([tokenId, timestamp])
+  @@index([fromAddress])
+  @@index([toAddress])
+  @@index([txHash])
+  @@map("transactions")
+}
+
+// 6. Accumulation Signals table
+model AccumulationSignal {
+  id            String          @id @default(uuid())
+  tokenId       String          @map("token_id")
+  score         Decimal         @db.Decimal(5, 2) // 0-100 with 2 decimal places
+  signalType    SignalType      @map("signal_type")
+  windowStart   DateTime        @map("window_start")
+  windowEnd     DateTime        @map("window_end")
+  walletsInvolved Json          @map("wallets_involved") // JSONB array
+  metadata      Json?           // JSONB for flexible fields
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  token  Token  @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  alerts Alert[]
+
+  @@index([signalType, createdAt])
+  @@index([tokenId, createdAt])
+  @@index([score])
+  @@map("accumulation_signals")
+}
+
+enum SignalType {
+  WHALE_INFLOW
+  EXCHANGE_OUTFLOW
+  LP_INCREASE
+  CONCENTRATED_BUYS
+  HOLDING_PATTERNS
+}
+
+// 7. Alerts table
+model Alert {
+  id         String        @id @default(uuid())
+  userId     String        @map("user_id")
+  signalId   String        @map("signal_id")
+  channels   Json          // JSONB: {telegram: true, email: false}
+  createdAt  DateTime      @default(now()) @map("created_at")
+  deliveredAt DateTime?    @map("delivered_at")
+  status     AlertStatus   @default(PENDING)
+
+  // Relations
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signal AccumulationSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([signalId])
+  @@map("alerts")
+}
+
+enum AlertStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+// 8. API Usage Log table
+model ApiUsageLog {
+  id           String   @id @default(uuid())
+  provider     String
+  endpoint     String
+  costEstimate Decimal? @map("cost_estimate") @db.Decimal(10, 4)
+  timestamp    DateTime @default(now())
+
+  @@index([provider, timestamp])
+  @@index([timestamp])
+  @@map("api_usage_log")
+}
+
+// 9. Sell Offer table (Roadmap 2.0)
+model SellOffer {
+  id            String   @id @default(uuid())
+  exchange      String   // binance, kucoin, etc.
+  symbol        String   // e.g., BTCUSDT
+  price         Decimal  @db.Decimal(20, 8)
+  quantity      Decimal  @db.Decimal(20, 8)
+  totalValue    Decimal  @db.Decimal(20, 8) @map("total_value")
+  wallType      String   @map("wall_type") // sell_wall, buy_wall
+  detectedAt    DateTime @default(now()) @map("detected_at")
+  removedAt     DateTime? @map("removed_at")
+  metadata      Json?    // JSONB for orderbook snapshot data
+
+  @@index([exchange, symbol, detectedAt])
+  @@index([symbol, detectedAt])
+  @@map("sell_offers")
+}
+
+// 10. Whale Event table (Roadmap 2.0)
+model WhaleEvent {
+  id            String      @id @default(uuid())
+  tokenId       String      @map("token_id")
+  walletId      String?     @map("wallet_id")
+  eventType     WhaleEventType @map("event_type")
+  amount        Decimal     @db.Decimal(78, 0)
+  valueUsd      Decimal?    @map("value_usd") @db.Decimal(20, 2)
+  exchange      String?     // if exchange-related
+  direction     String      // buy, sell, deposit, withdrawal
+  timestamp     DateTime
+  metadata      Json?       // JSONB for additional data
+
+  // Relations
+  token  Token   @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  wallet Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@index([tokenId, timestamp])
+  @@index([walletId, timestamp])
+  @@index([eventType, timestamp])
+  @@map("whale_events")
+}
+
+enum WhaleEventType {
+  LARGE_BUY
+  LARGE_SELL
+  EXCHANGE_DEPOSIT
+  EXCHANGE_WITHDRAWAL
+  WHALE_CLUSTER
+  SMART_MONEY_MOVE
+}
+
+// 11. Exchange Flow table (Roadmap 2.0)
+model ExchangeFlow {
+  id            String   @id @default(uuid())
+  tokenId       String   @map("token_id")
+  exchange      String   // binance, kucoin, etc.
+  flowType      String   @map("flow_type") // inflow, outflow
+  amount        Decimal  @db.Decimal(78, 0)
+  valueUsd      Decimal? @map("value_usd") @db.Decimal(20, 2)
+  walletAddress String?  @map("wallet_address")
+  timestamp     DateTime
+  metadata      Json?    // JSONB for transaction details
+
+  // Relations
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, timestamp])
+  @@index([exchange, timestamp])
+  @@index([flowType, timestamp])
+  @@map("exchange_flows")
+}
+
+// 12. DEX Swap Event table (Roadmap 2.0)
+model DexSwapEvent {
+  id            String   @id @default(uuid())
+  tokenId       String   @map("token_id")
+  dex           String   // uniswap, pancakeswap, etc.
+  poolAddress   String?  @map("pool_address")
+  swapType      String   @map("swap_type") // buy, sell
+  amountIn      Decimal  @map("amount_in") @db.Decimal(78, 0)
+  amountOut     Decimal  @map("amount_out") @db.Decimal(78, 0)
+  priceImpact   Decimal? @map("price_impact") @db.Decimal(10, 4)
+  walletAddress String?  @map("wallet_address")
+  txHash        String   @map("tx_hash")
+  blockNumber   BigInt   @map("block_number")
+  timestamp     DateTime
+  metadata      Json?    // JSONB for swap details
+
+  // Relations
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, timestamp])
+  @@index([dex, timestamp])
+  @@index([txHash])
+  @@map("dex_swap_events")
+}
+
+// 13. Token Metrics table (Roadmap 2.0)
+model TokenMetrics {
+  id              String   @id @default(uuid())
+  tokenId         String   @map("token_id")
+  priceUsd         Decimal? @map("price_usd") @db.Decimal(20, 8)
+  marketCap       Decimal? @map("market_cap") @db.Decimal(20, 2)
+  volume24h       Decimal? @map("volume_24h") @db.Decimal(20, 2)
+  holdersCount     Int?     @map("holders_count")
+  liquidity       Decimal? @db.Decimal(20, 2)
+  whaleScore       Decimal? @map("whale_score") @db.Decimal(5, 2) // 0-100
+  smartMoneyScore  Decimal? @map("smart_money_score") @db.Decimal(5, 2) // 0-100
+  recordedAt      DateTime @default(now()) @map("recorded_at")
+  metadata        Json?    // JSONB for additional metrics
+
+  // Relations
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, recordedAt])
+  @@index([recordedAt])
+  @@map("token_metrics")
+}
+
+// Add relations to existing models
+// Token relations
+//  model Token {
+//    ...
+//    whaleEvents    WhaleEvent[]
+//    exchangeFlows  ExchangeFlow[]
+//    dexSwapEvents  DexSwapEvent[]
+//    tokenMetrics   TokenMetrics[]
+//  }
+
+// Wallet relations
+//  model Wallet {
+//    ...
+//    whaleEvents     WhaleEvent[]
+//  }

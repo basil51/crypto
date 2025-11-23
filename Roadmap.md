@@ -22,6 +22,7 @@
 14. Cursor.com Integration — How to use this roadmap as the source-of-truth
 15. Sprint-by-Sprint Implementation Plan (Epics & Tasks)
 16. Appendix: Example Endpoints, SQL, and Worker Scripts
+17. **[Required API Keys](required_keys.md)** — Reference for all API keys and configuration
 
 ---
 
@@ -277,10 +278,22 @@ frontend/
 
 **Providers & use-cases:**
 
-* **Moralis / Alchemy / QuickNode:** transaction logs, token transfers, logs, mempool (if available)
+**Primary On-chain Providers (Currently Implemented):**
+* **Moralis:** transaction logs, token transfers, token metadata, price data ✅ Implemented
+* **Alchemy:** asset transfers, token balances, token metadata, block data ✅ Implemented
+
+**Additional On-chain Providers (To Be Added):**
+* **Bitquery:** whale tracking, wallet flows, advanced on-chain analytics, GraphQL API
+* **Etherscan / BscScan / PolygonScan:** holder count, smart contract events, transaction history, verified contract data
+* **The Graph:** DEX liquidity events, LP changes, subgraph-based indexing for DEX data
+
+**Market Data Providers:**
+* **CoinGecko / CoinMarketCap:** price and market data, market cap, trading volume
+* **Binance / KuCoin APIs:** CEX price data, orderbook depth (optional for MVP)
+
+**Other Providers:**
 * **Covalent:** token balances, historical token transfers across chains
-* **CoinGecko / CoinMarketCap:** price and market data
-* **TheGraph (where available):** DEX liquidity events and LP changes
+* **QuickNode:** transaction logs, mempool data (if available)
 
 **Integration patterns:**
 
@@ -416,43 +429,50 @@ Start with rule-based heuristics. Later add statistical or ML models (Python) on
 
 ## 15. Sprint-by-Sprint Implementation Plan (Concrete Tasks)
 
-**Sprint 0 — Setup (2 days)**
+**Sprint 0 — Setup (2 days)** ✅ **COMPLETED**
 
-* Initialize monorepo or two repos (`frontend`, `backend`)
-* Setup GitHub Actions skeleton
-* Create base Docker Compose with Postgres + Redis
-* Add basic README and ROADMAP_EN.md
+* ✅ Initialize monorepo or two repos (`frontend`, `backend`)
+* ✅ Setup GitHub Actions skeleton
+* ✅ Create base Docker Compose with Postgres + Redis
+* ✅ Add basic README and ROADMAP_EN.md
+* ✅ Create .env file and environment configuration
+* ✅ Setup pnpm workspace with dev command
 
-**Sprint 1 — Backend Core (10–15 days)**
+**Sprint 1 — Backend Core (10–15 days)** ✅ **COMPLETE**
 
-* Scaffold NestJS app + modules
-* Setup Prisma + PostgreSQL schema (migrate)
-* Implement auth (register, login)
-* Implement tokens and transactions models + endpoints
-* Implement integrations module with Moralis/Alchemy connector (polling)
-* Implement ingest worker to store transactions
+* ✅ Scaffold NestJS app + modules
+* ✅ Setup Prisma + PostgreSQL schema (migrate)
+* ✅ Implement auth (register, login)
+* ✅ Implement tokens and transactions models + endpoints (CRUD, validation DTOs, error handling complete)
+* ✅ Implement integrations module with Moralis/Alchemy connector (polling) (Full API integration with retries and error handling)
+* ✅ Implement ingest worker to store transactions (Complete ingestion service with transaction fetching and storage)
 
-**Sprint 2 — Detection & Workers (7–10 days)**
+**Additional Integrations (Future Enhancements):**
+* ⏳ Bitquery integration (whale tracking, advanced analytics)
+* ⏳ Etherscan/BscScan integration (holder data, contract events)
+* ⏳ The Graph integration (DEX liquidity data)
 
-* Implement wallet_positions updater
-* Implement detection worker (rule engine) + scoring
-* Implement accumulation_signals model and endpoints
-* Implement alert dispatcher skeleton (logs only)
+**Sprint 2 — Detection & Workers (7–10 days)** ✅ **COMPLETE**
 
-**Sprint 3 — Frontend MVP (8–12 days)**
+* ✅ Implement wallet_positions updater (Full position calculation and updates)
+* ✅ Implement detection worker (rule engine) + scoring (5 detection rules with weighted scoring)
+* ✅ Implement accumulation_signals model and endpoints (Enhanced with filtering and pagination)
+* ✅ Implement alert dispatcher skeleton (logs only) (Ready for Sprint 4 integration)
 
-* Scaffold Next.js app, Tailwind setup
-* Implement Dashboard (list signals)
-* Token detail pages
-* Alerts settings page
-* Auth flows (login/register)
+**Sprint 3 — Frontend MVP (8–12 days)** ✅ **COMPLETE**
 
-**Sprint 4 — Integrations & Hardening (7–10 days)**
+* ✅ Scaffold Next.js app, Tailwind setup
+* ✅ Implement Dashboard (list signals)
+* ✅ Token detail pages
+* ✅ Alerts settings page
+* ✅ Auth flows (login/register)
 
-* Add Telegram & Email integrations
-* Add caching & rate limiting
-* Add API usage logging & cost estimates
-* Add basic tests & CI
+**Sprint 4 — Integrations & Hardening (7–10 days)** ✅ **COMPLETE**
+
+* ✅ Add Telegram & Email integrations
+* ✅ Add caching & rate limiting
+* ✅ Add API usage logging & cost estimates
+* ✅ Add basic tests & CI
 
 **Sprint 5 — Beta & Launch (7–14 days)**
 
@@ -491,15 +511,18 @@ Response: { signals: [ {id, token_id, score, signal_type, created_at, metadata} 
 
 ## Final Notes & Next Steps
 
-* I will remain your technical project manager and guide inside Cursor.com and the repo.
-* Next immediate step: *I will commit this ROADMAP_EN.md to the repo and create the Sprint 0 tasks in Cursor.*
-* Tell me if you want me to also generate the initial repo scaffolding (NestJS + Next.js + Docker Compose) and open PRs in Cursor — I can create code stubs and CI config according to this roadmap.
+* ✅ **Sprint 0 Complete:** Repository scaffolding, Docker setup, CI/CD, and documentation are all in place.
+* 📊 **Status Tracking:** See `STATUS.md` for detailed progress tracking and task completion status.
+* 🎯 **Next Immediate Step:** Begin Sprint 1 — Backend Core. Start with Prisma schema setup and database migrations.
 
-**Choose the next action:**
+**Recommended Next Actions:**
 
-* `Create repo scaffolding now`
-* `Generate Prisma schema + initial migrations`
+* `Generate Prisma schema + initial migrations` — **START HERE**
 * `Scaffold NestJS modules + example endpoints`
-* `Scaffold Next.js pages + components`
+* `Implement auth (register, login)`
+* `Implement tokens and transactions models + endpoints`
 
-Pick one or more and I’ll start immediately, following this roadmap strictly.
+**Status Updates:**
+- This roadmap should be updated when sprints are completed (mark with ✅)
+- `STATUS.md` should be updated after each task completion
+- Both files work together: Roadmap = plan, STATUS = progress tracking
