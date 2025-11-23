@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 interface Token {
   id: string;
@@ -15,7 +17,11 @@ interface Token {
 interface Alert {
   id: string;
   signal?: {
+    id: string;
+    score?: number;
+    signalType?: string;
     token?: Token;
+    createdAt?: string;
   };
   token?: Token;
   channels: {
@@ -24,15 +30,18 @@ interface Alert {
   };
   status: string;
   createdAt?: string | null;
+  deliveredAt?: string | null;
 }
 
 export default function AlertsPage() {
+  const { isPro } = useAuth();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedToken, setSelectedToken] = useState('');
   const [channels, setChannels] = useState({ telegram: false, email: false });
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'history'>('subscriptions');
 
   useEffect(() => {
     loadData();
@@ -110,10 +119,36 @@ export default function AlertsPage() {
         <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold gradient-text mb-2">Alert Settings</h1>
+              <h1 className="text-4xl font-bold gradient-text mb-2">Watchlists & Alerts</h1>
               <p className="text-gray-600 text-lg">
-                Manage your token alert subscriptions
+                Manage your token watchlists and alert preferences
               </p>
+            </div>
+
+            {/* Tabs */}
+            <div className="mb-6 border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('subscriptions')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'subscriptions'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  My Subscriptions
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'history'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Alert History
+                </button>
+              </nav>
             </div>
 
             {error && (
@@ -122,6 +157,8 @@ export default function AlertsPage() {
               </div>
             )}
 
+            {activeTab === 'subscriptions' && (
+              <>
             {/* Subscribe Form */}
             <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Subscribe to Alerts</h2>
@@ -197,7 +234,7 @@ export default function AlertsPage() {
 
             {/* Active Subscriptions */}
             <div className="glass shadow-soft rounded-xl p-6 card-hover">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Active Subscriptions</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">My Watchlist</h2>
               {isLoading ? (
                 <div className="animate-pulse space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -280,6 +317,121 @@ export default function AlertsPage() {
                 </div>
               )}
             </div>
+              </>
+            )}
+
+            {activeTab === 'history' && (
+              <div className="glass shadow-soft rounded-xl p-6 card-hover">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Alert History</h2>
+                {isLoading ? (
+                  <div className="animate-pulse space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-20 bg-gray-200 rounded"></div>
+                    ))}
+                  </div>
+                ) : alerts.length === 0 ? (
+                  <p className="text-gray-500">No alert history yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Token
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Signal
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Channels
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Created
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Delivered
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {alerts.map((alert) => (
+                          <tr key={alert.id} className="transition-colors hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alert.signal?.token?.symbol || alert.token?.symbol || 'N/A'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {alert.signal?.token?.name || alert.token?.name || 'N/A'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {alert.signal ? (
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alert.signal.signalType || 'Accumulation'}
+                                  </div>
+                                  {alert.signal.score !== undefined && (
+                                    <div className="text-sm text-gray-500">
+                                      Score: {Number(alert.signal.score).toFixed(2)}
+                                    </div>
+                                  )}
+                                  {alert.signal.id && (
+                                    <Link
+                                      href={`/signals/${alert.signal.id}`}
+                                      className="text-xs text-purple-600 hover:text-purple-800"
+                                    >
+                                      View Signal →
+                                    </Link>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-400">No signal</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex space-x-2">
+                                {alert.channels.telegram && (
+                                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                                    Telegram
+                                  </span>
+                                )}
+                                {alert.channels.email && (
+                                  <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                                    Email
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  alert.status === 'DELIVERED'
+                                    ? 'bg-green-100 text-green-800'
+                                    : alert.status === 'PENDING'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {alert.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(alert.createdAt)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(alert.deliveredAt)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>

@@ -19,6 +19,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { WhalesModule } from './modules/whales/whales.module';
 import { OrderbookModule } from './modules/orderbook/orderbook.module';
 import { SellWallsModule } from './modules/sell-walls/sell-walls.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { SellWallsModule } from './modules/sell-walls/sell-walls.module';
     WhalesModule,
     OrderbookModule,
     SellWallsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

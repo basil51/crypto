@@ -36,6 +36,8 @@ export class UsersService {
         email: true,
         role: true,
         plan: true,
+        subscriptionStatus: true,
+        subscriptionEndsAt: true,
         createdAt: true,
         updatedAt: true,
       },

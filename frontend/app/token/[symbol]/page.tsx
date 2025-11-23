@@ -250,6 +250,7 @@ export default function TokenIntelligencePage() {
                 </tbody>
                 </table>
               </div>
+            </div>
             )}
           </div>
         </main>

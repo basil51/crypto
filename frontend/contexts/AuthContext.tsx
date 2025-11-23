@@ -8,6 +8,8 @@ interface User {
   email: string;
   role: string;
   plan: string;
+  subscriptionStatus?: string;
+  subscriptionEndsAt?: string;
 }
 
 interface AuthContextType {
@@ -16,8 +18,10 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isPro: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const userData = await api.getCurrentUser();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
+  const isPro = !!(user?.plan === 'PRO' && 
+    (user?.subscriptionStatus === 'active' || 
+     (user?.subscriptionEndsAt && new Date(user.subscriptionEndsAt) > new Date())));
+
   return (
     <AuthContext.Provider
       value={{
@@ -71,8 +89,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
         isLoading,
         isAuthenticated: !!user && !!token,
+        isPro,
       }}
     >
       {children}

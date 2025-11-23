@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
+import SubscriptionRequired from '@/components/SubscriptionRequired';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SellWall {
   id: string;
@@ -21,8 +23,10 @@ interface SellWall {
 }
 
 export default function SellWallsPage() {
+  const { isPro } = useAuth();
   const [sellWalls, setSellWalls] = useState<SellWall[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [selectedExchange, setSelectedExchange] = useState<string>('all');
 
   useEffect(() => {
@@ -33,14 +37,20 @@ export default function SellWallsPage() {
 
   const loadSellWalls = async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await api.getSellWalls({
         exchange: selectedExchange !== 'all' ? selectedExchange : undefined,
         activeOnly: true,
       });
       setSellWalls(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading sell walls:', error);
+      if (error.statusCode === 403) {
+        setError('This feature requires a Pro subscription');
+      } else {
+        setError(error.message || 'Failed to load sell walls');
+      }
     } finally {
       setLoading(false);
     }
@@ -77,7 +87,17 @@ export default function SellWallsPage() {
               </div>
             </div>
 
-            {loading && (
+            {!isPro && (
+              <SubscriptionRequired feature="Sell Wall detection" />
+            )}
+
+            {isPro && error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+
+            {isPro && loading && (
               <div className="glass shadow-soft rounded-xl p-8">
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -85,7 +105,7 @@ export default function SellWallsPage() {
               </div>
             )}
 
-            {!loading && sellWalls.length === 0 && (
+            {isPro && !loading && sellWalls.length === 0 && (
               <div className="glass shadow-soft rounded-xl p-8 text-center">
                 <p className="text-gray-600">
                   No sell walls detected yet. The sell wall detector runs every 5 minutes.
@@ -93,7 +113,7 @@ export default function SellWallsPage() {
               </div>
             )}
 
-            {!loading && sellWalls.length > 0 && (
+            {isPro && !loading && sellWalls.length > 0 && (
               <div className="glass shadow-soft rounded-xl overflow-hidden card-hover">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

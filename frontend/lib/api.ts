@@ -161,6 +161,24 @@ class ApiClient {
     const query = queryParams.toString();
     return this.request<any[]>(`/sell-walls${query ? `?${query}` : ''}`);
   }
+
+  // Billing endpoints
+  async createCheckoutSession(plan: string = 'PRO') {
+    return this.request<{ sessionId: string; url: string }>('/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ plan }),
+    });
+  }
+
+  async createBillingPortalSession() {
+    return this.request<{ url: string }>('/billing/portal', {
+      method: 'POST',
+    });
+  }
+
+  async getCurrentUser() {
+    return this.request<any>('/users/me');
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

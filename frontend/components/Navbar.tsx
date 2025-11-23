@@ -53,6 +53,12 @@ export default function Navbar() {
                 >
                   Sell Walls
                 </Link>
+                <Link
+                  href="/billing"
+                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+                >
+                  Billing
+                </Link>
               </div>
             )}
           </div>

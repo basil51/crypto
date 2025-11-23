@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { WhalesService } from './whales.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequireSubscription } from '../billing/decorators/require-subscription.decorator';
 
 @Controller('whales')
 @UseGuards(JwtAuthGuard)
@@ -17,6 +18,7 @@ export class WhalesController {
   constructor(private readonly whalesService: WhalesService) {}
 
   @Get('top-buyers')
+  @RequireSubscription()
   async getTopBuyers(
     @Query('tokenId') tokenId: string,
     @Query('hours', new DefaultValuePipe(24), ParseIntPipe) hours: number,
@@ -29,6 +31,7 @@ export class WhalesController {
   }
 
   @Get('exchange-flows')
+  @RequireSubscription()
   async getExchangeFlows(
     @Query('hours', new DefaultValuePipe(24), ParseIntPipe) hours: number,
     @Query('tokenId') tokenId?: string,
@@ -38,6 +41,7 @@ export class WhalesController {
   }
 
   @Get('token/:tokenId')
+  @RequireSubscription()
   async getTokenWhaleActivity(
     @Param('tokenId') tokenId: string,
     @Query('hours', new DefaultValuePipe(24), ParseIntPipe) hours: number,

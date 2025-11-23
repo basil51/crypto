@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
+import SubscriptionRequired from '@/components/SubscriptionRequired';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TopBuyer {
   address: string;
@@ -24,11 +26,13 @@ interface WhaleActivity {
 }
 
 export default function WhalesPage() {
+  const { isPro } = useAuth();
   const [selectedTokenId, setSelectedTokenId] = useState<string>('');
   const [tokens, setTokens] = useState<any[]>([]);
   const [whaleActivity, setWhaleActivity] = useState<WhaleActivity | null>(null);
   const [exchangeFlows, setExchangeFlows] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [hours, setHours] = useState(24);
 
   useEffect(() => {
@@ -57,11 +61,17 @@ export default function WhalesPage() {
   const loadWhaleActivity = async () => {
     if (!selectedTokenId) return;
     setLoading(true);
+    setError('');
     try {
       const data = await api.getTokenWhaleActivity(selectedTokenId, hours);
       setWhaleActivity(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading whale activity:', error);
+      if (error.statusCode === 403) {
+        setError('This feature requires a Pro subscription');
+      } else {
+        setError(error.message || 'Failed to load whale activity');
+      }
     } finally {
       setLoading(false);
     }
@@ -72,8 +82,11 @@ export default function WhalesPage() {
     try {
       const data = await api.getExchangeFlows(selectedTokenId, undefined, hours);
       setExchangeFlows(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading exchange flows:', error);
+      if (error.statusCode === 403) {
+        setError('This feature requires a Pro subscription');
+      }
     }
   };
 
@@ -128,7 +141,17 @@ export default function WhalesPage() {
               </div>
             </div>
 
-            {loading && (
+            {!isPro && (
+              <SubscriptionRequired feature="Whale Activity tracking" />
+            )}
+
+            {isPro && error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+
+            {isPro && loading && (
               <div className="glass shadow-soft rounded-xl p-8">
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -136,7 +159,7 @@ export default function WhalesPage() {
               </div>
             )}
 
-            {whaleActivity && !loading && (
+            {isPro && whaleActivity && !loading && (
               <>
                 {/* Whale Score Card */}
                 <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">

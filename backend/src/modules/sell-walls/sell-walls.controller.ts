@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { SellWallsService } from './sell-walls.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequireSubscription } from '../billing/decorators/require-subscription.decorator';
 
 @Controller('sell-walls')
 @UseGuards(JwtAuthGuard)
@@ -17,6 +18,7 @@ export class SellWallsController {
   constructor(private readonly sellWallsService: SellWallsService) {}
 
   @Get()
+  @RequireSubscription()
   async findAll(
     @Query('exchange') exchange?: string,
     @Query('symbol') symbol?: string,
@@ -33,6 +35,7 @@ export class SellWallsController {
   }
 
   @Get('token/:tokenId')
+  @RequireSubscription()
   async findByToken(
     @Param('tokenId') tokenId: string,
     @Query('activeOnly', new DefaultValuePipe(true), ParseBoolPipe)
