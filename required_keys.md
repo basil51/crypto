@@ -111,25 +111,31 @@ This file tracks all API keys and configuration required for the Crypto Accumula
 
 ---
 
-## 📋 Planned Integrations (Future Keys)
+## 📊 Advanced Analytics Keys (Optional - Roadmap2 Phase 2)
 
 ### Bitquery API Key
 - **Variable:** `BITQUERY_API_KEY`
-- **Purpose:** Advanced whale tracking and wallet flow analysis
+- **Purpose:** Advanced whale tracking, wallet flow analysis, and on-chain analytics via GraphQL
 - **Sign up:** https://bitquery.io/
-- **Status:** ⏳ Planned for Sprint 4
+- **Status:** 🟡 Optional - For advanced whale tracking features
+- **Cost:** Paid service (pricing varies by usage, ~$0.001 per query)
 
-### Etherscan/BscScan API Keys
+### Etherscan/BscScan/PolygonScan API Keys
 - **Variables:** `ETHERSCAN_API_KEY`, `BSCSCAN_API_KEY`, `POLYGONSCAN_API_KEY`
-- **Purpose:** Smart contract verification, holder counts, transaction history
-- **Sign up:** https://etherscan.io/apis, https://bscscan.com/apis
-- **Status:** ⏳ Planned for Sprint 4
+- **Purpose:** Smart contract verification, holder counts, transaction history, contract events
+- **Sign up:** 
+  - Ethereum: https://etherscan.io/apis
+  - BSC: https://bscscan.com/apis
+  - Polygon: https://polygonscan.com/apis
+- **Status:** 🟡 Optional - For holder tracking and contract data
+- **Cost:** Free tier available (5 calls/sec), paid tiers for higher limits
 
-### The Graph API Key
-- **Variable:** `THEGRAPH_API_KEY`
-- **Purpose:** DEX liquidity pool monitoring via subgraphs
-- **Sign up:** https://thegraph.com/
-- **Status:** ⏳ Planned for Sprint 4
+### The Graph (No API Key Required)
+- **Variable:** None (public subgraphs)
+- **Purpose:** DEX liquidity pool monitoring, LP position changes, swap events
+- **Subgraphs:** Uniswap V2/V3, PancakeSwap V2
+- **Status:** 🟡 Optional - For DEX analytics and liquidity monitoring
+- **Cost:** Free (rate-limited, no key needed for public subgraphs)
 
 ### Binance API Key (Optional)
 - **Variable:** `BINANCE_API_KEY`
