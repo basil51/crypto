@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { OrderbookService } from '../../orderbook/orderbook.service';
@@ -8,15 +9,24 @@ import { EnhancedAlertTriggerService } from '../../alerts/services/enhanced-aler
 @Injectable()
 export class SellWallDetectorService {
   private readonly logger = new Logger(SellWallDetectorService.name);
-  private readonly SELL_WALL_THRESHOLD = 50000; // $50k USD equivalent
-  private readonly WALL_PRICE_RANGE = 0.02; // 2% price range
+  private readonly SELL_WALL_THRESHOLD: number;
+  private readonly WALL_PRICE_RANGE: number;
 
   constructor(
     private prisma: PrismaService,
     private orderbookService: OrderbookService,
     private cacheService: CacheService,
     private alertTrigger: EnhancedAlertTriggerService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    // Load thresholds from environment or use defaults
+    this.SELL_WALL_THRESHOLD = this.configService.get<number>('SELL_WALL_THRESHOLD') || 50000; // $50k USD equivalent
+    this.WALL_PRICE_RANGE = this.configService.get<number>('SELL_WALL_PRICE_RANGE') || 0.02; // 2% price range
+    
+    this.logger.log(
+      `Sell wall detection thresholds: Threshold=${this.SELL_WALL_THRESHOLD}, PriceRange=${this.WALL_PRICE_RANGE}`
+    );
+  }
 
   /**
    * Run sell wall detection every 5 minutes
