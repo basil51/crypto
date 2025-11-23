@@ -10,6 +10,11 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  @Get('health')
+  health() {
+    return { status: 'ok' };
+  }
+
   /**
    * Public endpoint for homepage statistics
    */
@@ -38,3 +43,4 @@ export class AppController {
     return this.appService.getRecentWhaleTransactions(limit);
   }
 }
+

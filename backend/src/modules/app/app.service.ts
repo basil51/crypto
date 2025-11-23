@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
-import { CacheService } from './common/cache/cache.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 
 @Injectable()
 export class AppService {
@@ -125,6 +125,7 @@ export class AppService {
             const token = item.token;
             const score = item.score;
             
+            // Get recent whale events for whale flow calculation
             return {
               rank: index + 1,
               tokenId: token.id,
@@ -133,6 +134,8 @@ export class AppService {
               name: token.name,
               contractAddress: token.contractAddress,
               accumScore: Math.round(score),
+              // Price and change would come from price API (CoinGecko, etc.)
+              // For now, we'll calculate whale flow
             };
           });
 
@@ -234,3 +237,4 @@ export class AppService {
     return `${Math.floor(seconds / 86400)}d ago`;
   }
 }
+

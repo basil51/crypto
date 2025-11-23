@@ -1,284 +1,329 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import Navbar from '@/components/Navbar';
-import { api } from '@/lib/api';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Zap, ArrowRight, BarChart3, Wallet, Search } from 'lucide-react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 
-interface Signal {
-  id: string;
-  score: number | string;
-  signalType: string;
-  createdAt: string;
-  token: {
-    id: string;
-    symbol: string;
-    name: string;
-    chain: string;
-    contractAddress: string;
-  };
-  metadata: any;
-  buyAmount?: string;
-  buyAmountFormatted?: string;
-  transactionCount?: number;
-  isBuy?: boolean;
+interface TopToken {
+  rank: number;
+  symbol: string;
+  chain: string;
+  price: string;
+  change: string;
+  accumScore: number;
+  whaleFlow: string;
+  tokenId?: string;
+  contractAddress?: string;
 }
 
-// Helper function to convert score to number (handles Prisma Decimal)
-const getScoreNumber = (score: number | string): number => {
-  if (typeof score === 'number') return score;
-  return parseFloat(score.toString());
-};
+interface WhaleTx {
+  wallet: string;
+  action: string;
+  amount: string;
+  token: string;
+  chain: string;
+  time: string;
+}
 
-export default function Dashboard() {
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    minScore: '',
-    chain: '',
-    recentHours: '24',
+interface Stats {
+  walletsTracked: number;
+  volumeTracked: number;
+  alertsSent: number;
+  accuracy: number;
+}
+
+export default function Homepage() {
+  const [topTokens, setTopTokens] = useState<TopToken[]>([]);
+  const [whaleTxs, setWhaleTxs] = useState<WhaleTx[]>([]);
+  const [stats, setStats] = useState<Stats>({
+    walletsTracked: 0,
+    volumeTracked: 0,
+    alertsSent: 0,
+    accuracy: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadSignals();
-  }, [filters]);
+    loadHomepageData();
+    
+    // Refresh data every 30 seconds
+    const interval = setInterval(() => {
+      loadHomepageData();
+    }, 30000);
 
-  const loadSignals = async () => {
-    setIsLoading(true);
-    setError('');
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadHomepageData = async () => {
     try {
-      const params: any = {};
-      if (filters.minScore) params.minScore = parseFloat(filters.minScore);
-      if (filters.chain) params.chain = filters.chain;
-      if (filters.recentHours) params.recentHours = parseInt(filters.recentHours);
-      params.limit = 50;
+      setIsLoading(true);
+      setError(null);
 
-      const data = await api.getSignals(params);
-      setSignals(data);
+      // Load all data in parallel
+      const [statsData, tokensData, transactionsData] = await Promise.all([
+        api.getHomepageStats(),
+        api.getTopAccumulatingTokens(10),
+        api.getRecentWhaleTransactions(10),
+      ]);
+
+      setStats(statsData);
+      setTopTokens(tokensData);
+      setWhaleTxs(transactionsData);
     } catch (err: any) {
-      setError(err.message || 'Failed to load signals');
+      console.error('Failed to load homepage data:', err);
+      setError(err.message || 'Failed to load data');
+      // Keep existing data on error
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getScoreColor = (score: number | string) => {
-    const scoreNum = getScoreNumber(score);
-    if (scoreNum >= 75) return 'text-red-600 bg-red-50';
-    if (scoreNum >= 60) return 'text-yellow-600 bg-yellow-50';
-    return 'text-green-600 bg-green-50';
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getSignalTypeLabel = (signalType: string) => {
-    const labels: Record<string, string> = {
-      WHALE_INFLOW: 'Whale Buying',
-      EXCHANGE_OUTFLOW: 'Exchange Withdrawal (Buying)',
-      LP_INCREASE: 'Liquidity Pool Increase',
-      CONCENTRATED_BUYS: 'Concentrated Buying',
-      HOLDING_PATTERNS: 'Accumulation Pattern',
-    };
-    return labels[signalType] || signalType;
-  };
+  const chains = ['ETH', 'SOL', 'BASE', 'BSC', 'ARB', 'MATIC'];
+  
+  const features = [
+    { icon: <Zap className="w-6 h-6" />, title: 'Real-Time Whale Alerts', desc: 'Get instant notifications when smart money moves' },
+    { icon: <BarChart3 className="w-6 h-6" />, title: 'Accumulation Score', desc: 'AI-powered scoring system (0-100) for entry timing' },
+    { icon: <Wallet className="w-6 h-6" />, title: 'Smart Money Tracker', desc: 'Follow top 1% wallets with proven track records' },
+    { icon: <Search className="w-6 h-6" />, title: 'Alpha Screener', desc: 'Find hidden gems before they pump 100x' },
+  ];
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold gradient-text mb-2">Dashboard</h1>
-              <p className="text-gray-600 text-lg">
-                Recent accumulation signals and whale activity
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-purple-500/20 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6" />
             </div>
+            <span className="text-xl font-bold">SmartFlow</span>
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/dashboard" className="hover:text-purple-400 transition">Dashboard</Link>
+            <Link href="/whales" className="hover:text-purple-400 transition">Whales</Link>
+            <Link href="/tokens" className="hover:text-purple-400 transition">Screener</Link>
+            <Link href="/billing" className="hover:text-purple-400 transition">Pricing</Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="px-4 py-2 hover:text-purple-400 transition">Login</Link>
+            <Link href="/register" className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition">
+              Start Free Trial
+            </Link>
+          </div>
+        </div>
+      </nav>
 
-            {/* Filters */}
-            <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Minimum Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={filters.minScore}
-                    onChange={(e) => setFilters({ ...filters, minScore: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                    placeholder="e.g. 60"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Chain
-                  </label>
-                  <select
-                    value={filters.chain}
-                    onChange={(e) => setFilters({ ...filters, chain: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                  >
-                    <option value="">All Chains</option>
-                    <option value="ethereum">Ethereum</option>
-                    <option value="bsc">BSC</option>
-                    <option value="polygon">Polygon</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Recent Hours
-                  </label>
-                  <select
-                    value={filters.recentHours}
-                    onChange={(e) => setFilters({ ...filters, recentHours: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                  >
-                    <option value="1">Last Hour</option>
-                    <option value="6">Last 6 Hours</option>
-                    <option value="24">Last 24 Hours</option>
-                    <option value="168">Last Week</option>
-                  </select>
-                </div>
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm">
+                {isLoading ? 'Loading...' : `${stats.walletsTracked.toLocaleString()} smart wallets tracked live`}
+              </span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              Follow Smart Money,<br />Before It&apos;s Too Late
+            </h1>
+            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+              Track whale accumulation across 6 chains. Get alerted when smart money enters. 
+              Find the next 100x before everyone else.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/register" className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition flex items-center gap-2">
+                Start 7-Day Free Trial <ArrowRight className="w-5 h-5" />
+              </Link>
+              <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl font-semibold text-lg hover:bg-white/10 transition">
+                Watch Demo
+              </button>
+            </div>
+          </div>
+
+          {/* Supported Chains */}
+          <div className="flex items-center justify-center gap-4 mb-16">
+            {chains.map((chain) => (
+              <div key={chain} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg backdrop-blur text-sm font-semibold">
+                {chain}
+              </div>
+            ))}
+          </div>
+
+          {/* Live Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 backdrop-blur">
+              <div className="text-3xl font-bold mb-2">
+                {isLoading ? '...' : stats.walletsTracked.toLocaleString()}
+              </div>
+              <div className="text-gray-400">Wallets Tracked</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 backdrop-blur">
+              <div className="text-3xl font-bold mb-2">
+                {isLoading ? '...' : `$${stats.volumeTracked.toFixed(1)}B`}
+              </div>
+              <div className="text-gray-400">Volume Tracked</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 backdrop-blur">
+              <div className="text-3xl font-bold mb-2">
+                {isLoading ? '...' : stats.alertsSent.toLocaleString()}
+              </div>
+              <div className="text-gray-400">Alerts Sent</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 backdrop-blur">
+              <div className="text-3xl font-bold mb-2">
+                {isLoading ? '...' : `${stats.accuracy}%`}
+              </div>
+              <div className="text-gray-400">Accuracy</div>
+            </div>
+          </div>
+
+          {/* Top 10 Accumulating Tokens */}
+          <div className="bg-black/40 border border-purple-500/20 rounded-2xl p-8 backdrop-blur mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <TrendingUp className="w-6 h-6 text-purple-400" />
+                Top 10 Accumulating Tokens Right Now
+              </h2>
+              <div className="flex items-center gap-2 text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm">LIVE</span>
               </div>
             </div>
-
-            {/* Signals List */}
             {error && (
-              <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 shadow-soft">
+              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
                 {error}
               </div>
             )}
-
-            {isLoading ? (
-              <div className="glass shadow-soft rounded-xl p-8">
-                <div className="animate-pulse space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-                  ))}
-                </div>
+            {isLoading && topTokens.length === 0 ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse"></div>
+                ))}
               </div>
-            ) : signals.length === 0 ? (
-              <div className="glass shadow-soft rounded-xl p-8 text-center">
-                <p className="text-gray-500 text-lg">No signals found. Try adjusting your filters.</p>
+            ) : topTokens.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                No accumulating tokens found. Check back soon!
               </div>
             ) : (
-              <div className="glass shadow-soft rounded-xl overflow-hidden card-hover">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Token
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Score
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Buy/Sell
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Buy Amount
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Chain
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Detected
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {signals.map((signal) => (
-                        <tr key={signal.id} className="transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {signal.token.symbol}
-                                </div>
-                                <div className="text-sm text-gray-500">{signal.token.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getScoreColor(
-                                signal.score
-                              )}`}
-                            >
-                              {getScoreNumber(signal.score).toFixed(1)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="font-medium">{getSignalTypeLabel(signal.signalType)}</div>
-                            <div className="text-xs text-gray-400">{signal.signalType}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {signal.isBuy !== undefined ? (
-                              <span
-                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  signal.isBuy
-                                    ? 'text-green-700 bg-green-100'
-                                    : 'text-red-700 bg-red-100'
-                                }`}
-                              >
-                                {signal.isBuy ? '🟢 BUY' : '🔴 SELL'}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 text-xs">N/A</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                            {signal.buyAmountFormatted ? (
-                              <div>
-                                <div className="font-semibold">{signal.buyAmountFormatted} {signal.token.symbol}</div>
-                                {signal.transactionCount !== undefined && (
-                                  <div className="text-xs text-gray-500">
-                                    {signal.transactionCount} {signal.transactionCount === 1 ? 'tx' : 'txs'}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 text-xs">Calculating...</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {signal.token.chain}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(signal.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <Link
-                              href={`/signals/${signal.id}`}
-                              className="text-purple-600 hover:text-purple-800 font-semibold hover:underline transition-colors"
-                            >
-                              View Details
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="space-y-3">
+                {topTokens.map((token) => (
+                  <Link
+                    key={token.rank}
+                    href={`/token/${token.chain}/${token.contractAddress || token.symbol}`}
+                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center font-bold">
+                        {token.rank}
+                      </div>
+                      <div>
+                        <div className="font-bold flex items-center gap-2">
+                          {token.symbol}
+                          <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded">
+                            {token.chain}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-400">{token.price}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <div className="text-right">
+                        <div className="text-green-400 font-semibold">{token.change}</div>
+                        <div className="text-xs text-gray-400">24h</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center gap-1">
+                          <div className="w-12 bg-gray-700 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{width: `${token.accumScore}%`}}></div>
+                          </div>
+                          <span className="text-sm font-bold">{token.accumScore}</span>
+                        </div>
+                        <div className="text-xs text-gray-400">Score</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-purple-400 font-semibold">{token.whaleFlow}</div>
+                        <div className="text-xs text-gray-400">Whale Flow</div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </ProtectedRoute>
+
+          {/* Live Whale Transactions */}
+          <div className="bg-black/40 border border-purple-500/20 rounded-2xl p-8 backdrop-blur mb-16">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Wallet className="w-6 h-6 text-purple-400" />
+              Live Whale Transactions
+            </h2>
+            {isLoading && whaleTxs.length === 0 ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse"></div>
+                ))}
+              </div>
+            ) : whaleTxs.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                No recent whale transactions. Check back soon!
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {whaleTxs.map((tx, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 bg-gradient-to-r from-green-500/10 to-transparent border border-green-500/20 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="font-mono text-sm text-gray-400">{tx.wallet}</span>
+                      <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-lg font-semibold">
+                        {tx.action}
+                      </span>
+                      <span className="text-xl font-bold">{tx.amount}</span>
+                      <span className="text-gray-400">of</span>
+                      <span className="font-bold">{tx.token}</span>
+                      <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded">
+                        {tx.chain}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">{tx.time}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Features */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {features.map((feature, i) => (
+              <div key={i} className="bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl p-6 hover:border-purple-500/50 transition">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <p className="text-gray-400">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Section */}
+          <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-2xl p-12 text-center">
+            <h2 className="text-4xl font-bold mb-4">Ready to Trade Like a Whale?</h2>
+            <p className="text-xl text-gray-300 mb-8">Join 10,000+ traders who never miss accumulation phases</p>
+            <Link href="/register" className="px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition inline-block">
+              Start Your Free Trial Now
+            </Link>
+            <p className="text-sm text-gray-400 mt-4">No credit card required • Cancel anytime</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-12 px-6">
+        <div className="max-w-7xl mx-auto text-center text-gray-400">
+          <p>© 2025 SmartFlow. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
   );
 }

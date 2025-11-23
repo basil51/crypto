@@ -234,6 +234,30 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  // Public homepage endpoints (no auth required)
+  async getHomepageStats() {
+    return this.request<{
+      walletsTracked: number;
+      volumeTracked: number;
+      alertsSent: number;
+      accuracy: number;
+    }>('/public/stats', {
+      headers: { skipAuth: 'true' },
+    });
+  }
+
+  async getTopAccumulatingTokens(limit: number = 10) {
+    return this.request<any[]>(`/public/top-tokens?limit=${limit}`, {
+      headers: { skipAuth: 'true' },
+    });
+  }
+
+  async getRecentWhaleTransactions(limit: number = 10) {
+    return this.request<any[]>(`/public/whale-transactions?limit=${limit}`, {
+      headers: { skipAuth: 'true' },
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
