@@ -1,7 +1,9 @@
-# Remaining Tasks Summary
+# Remaining Tasks Summary - SmartFlow
 
-> **Last Updated:** 2025-11-22  
+> **Last Updated:** 2025-11-23  
 > **Purpose:** Track all unfinished tasks from Roadmap.md and Roadmap2.md before adding new blockchain support
+> **Project Name:** SmartFlow (formerly Crypto Signals)
+> **Brand Identity:** Purple-to-pink gradient theme with modern, professional trader-focused UI
 
 ---
 
@@ -173,25 +175,101 @@
 
 ### Status: ⏳ **0% Complete**
 
-#### UI/UX Improvements:
-- ⏳ Charts and visualizations (currently only tables)
-  - Whale accumulation heatmap
-  - Time-based charts (5m, 15m, 1h, 24h)
-  - Orderbook heatmap visualization
-  - Price/volume charts
-  - Accumulation timeline charts
+#### UI/UX Improvements - **NEW PRIORITY** ⏳ IN PROGRESS
+Based on new professional design system (see `/other` folder for reference designs)
 
-- ⏳ WebSocket data sync
-  - Real-time data updates
-  - Live orderbook updates
-  - Real-time signal notifications
+**1. ⏳ Homepage Redesign** - **HIGH PRIORITY**
+   - ✅ Design reference created (`/other/home/page.tsx`)
+   - ⏳ Implement new SmartFlow branding (purple-to-pink gradient)
+   - ⏳ Hero section with "Follow Smart Money" messaging
+   - ⏳ Live stats counter (wallets tracked, volume, alerts, accuracy)
+   - ⏳ Top 10 Accumulating Tokens live feed
+   - ⏳ Live Whale Transactions ticker
+   - ⏳ Supported chains display (ETH, SOL, BASE, BSC, ARB, MATIC)
+   - ⏳ Features section with icons
+   - ⏳ CTA sections for free trial
+   - ⏳ Modern navigation with SmartFlow logo/icon
 
-- ⏳ Token search improvements
-  - Advanced search filters
-  - Search autocomplete
-  - Search history
+**2. ⏳ Dashboard Redesign** - **HIGH PRIORITY**
+   - ✅ Design reference created (`/other/Dashboard/page.tsx`)
+   - ⏳ Multi-chain view toggle (All Chains / ETH / SOL / BASE / etc.)
+   - ⏳ Hot Accumulations section (tokens with highest smart money inflow)
+   - ⏳ Whale Alerts Feed (real-time)
+   - ⏳ Smart Money Wallets Leaderboard
+   - ⏳ New Born Tokens section (first 30 min with whale buys)
+   - ⏳ Top Gainers Prediction (based on accumulation score)
+   - ⏳ Modern card-based layout with gradients
+   - ⏳ Real-time data updates
 
-- ⏳ Skeleton loaders for real-time pages
+**3. ⏳ Token Detail Page Redesign** - **HIGH PRIORITY**
+   - ✅ Design reference created (`/other/Detail/page.tsx`)
+   - ⏳ Route: `/token/:chain/:address` (updated from `/token/:symbol`)
+   - ⏳ Enhanced token header with badges (MEGA ACCUMULATION, HIGH VOLUME, etc.)
+   - ⏳ Price chart + Volume integration (TradingView or Recharts)
+   - ⏳ Accumulation Score breakdown (0-100 with sub-scores)
+   - ⏳ AI Price Targets (24h, 7d, 30d with probability)
+   - ⏳ Social Sentiment Score
+   - ⏳ Whale transactions list with wallet names/labels
+   - ⏳ Top Holders with distribution
+   - ⏳ Holder Distribution Bubble Map visualization
+   - ⏳ Smart Money vs Retail flow charts
+   - ⏳ Tabbed interface (Transactions, Holders, Distribution, Smart Money Flow)
+   - ⏳ Watchlist and alert buttons
+   - ⏳ Modern stats grid layout
+
+**4. ⏳ Charts and Visualizations** - **MEDIUM PRIORITY**
+   - ⏳ Price/volume charts (TradingView integration or Recharts)
+   - ⏳ Whale accumulation heatmap
+   - ⏳ Time-based charts (1H, 24H, 7D, 30D, 1Y)
+   - ⏳ Orderbook heatmap visualization
+   - ⏳ Accumulation timeline charts
+   - ⏳ Holder distribution bubble map
+   - ⏳ Smart money flow charts
+
+**5. ⏳ WebSocket Real-Time Data Sync** - **HIGH PRIORITY**
+   - ⏳ Real-time data updates for dashboard
+   - ⏳ Live orderbook updates
+   - ⏳ Real-time signal notifications
+   - ⏳ Live whale transaction feed
+   - ⏳ WebSocket connection management
+   - ⏳ Auto-reconnect logic
+
+**6. ⏳ Alpha Screener Page** - **NEW FEATURE**
+   - ⏳ Advanced filters (Chain, Age, Volume, MCAP, Whale inflow %, Accumulation score)
+   - ⏳ "Find next 100x" presets:
+     - < $1M MC + > 5 smart wallets bought
+     - Solana tokens < 10 min old with whale buy
+     - ETH tokens with > 10 winning wallets accumulating
+   - ⏳ Results table with sortable columns
+   - ⏳ Quick actions (watchlist, alert, view detail)
+
+**7. ⏳ Whale Wallet Tracker Page** - **NEW FEATURE**
+   - ⏳ Route: `/wallet/:address`
+   - ⏳ Wallet performance history (PnL %)
+   - ⏳ Current holdings
+   - ⏳ Recent transactions
+   - ⏳ Win rate % (how many tokens they 5x+)
+   - ⏳ Copy-trade button (future feature)
+   - ⏳ Wallet score/rating
+
+**8. ⏳ Smart Money Portfolios Page** - **NEW FEATURE**
+   - ⏳ Pre-built lists:
+     - Top 50 Winning Wallets (all chains)
+     - Wintermute, GSR, Cumberland (institutions)
+     - Ansem, Sigma, Murad wallets (KOLs)
+   - ⏳ Custom "Follow" feature
+   - ⏳ Portfolio performance tracking
+
+**9. ⏳ Token Search Improvements**
+   - ⏳ Advanced search filters
+   - ⏳ Search autocomplete
+   - ⏳ Search history
+   - ⏳ Multi-chain search
+
+**10. ⏳ Skeleton Loaders & Loading States**
+   - ⏳ Skeleton loaders for real-time pages
+   - ⏳ Loading states for charts
+   - ⏳ Progressive data loading
 
 #### Performance & Scaling:
 - ⏳ Load tests
@@ -228,7 +306,8 @@
 ### Overall Completion:
 - **Core MVP (Roadmap.md):** ✅ 100% Complete 🎉
 - **Extended Features (Roadmap2.md):** ✅ 80% Complete
-- **Total Project:** ⏳ ~85% Complete
+- **UI/UX Improvements:** ⏳ 10% Complete (Reference designs created, implementation pending)
+- **Total Project:** ⏳ ~75% Complete (UI/UX improvements needed for production readiness)
 
 ---
 
@@ -256,9 +335,15 @@
    - ✅ Bitquery, Etherscan, The Graph integrations
    - ✅ DEX analytics
 
-5. ⏳ UI/UX Improvements
-   - Charts and visualizations
-   - WebSocket real-time updates
+5. ⏳ **UI/UX Improvements - NEW PRIORITY** ⏳ **IN PROGRESS**
+   - ⏳ Homepage redesign (SmartFlow branding)
+   - ⏳ Dashboard redesign (multi-chain view)
+   - ⏳ Token detail page redesign (`/token/:chain/:address`)
+   - ⏳ Charts and visualizations (TradingView/Recharts)
+   - ⏳ WebSocket real-time updates
+   - ⏳ Alpha Screener page (NEW)
+   - ⏳ Whale Wallet Tracker page (NEW)
+   - ⏳ Smart Money Portfolios page (NEW)
 
 ### Low Priority (Can be done later):
 6. ⏳ Roadmap2.md Phase 4 (Pro Trader Tools)
@@ -273,6 +358,7 @@
 
 ## 📝 Notes
 
+- **Project Rebranding:** ⏳ In Progress - Migrating from "Crypto Signals" to "SmartFlow"
 - **Stripe Integration:** ✅ Complete - Backend and frontend integrated
 - **Beta Invitations:** ✅ Complete - Backend system with Feedback model
 - **Monitoring:** ✅ Complete - Sentry integration with error tracking and performance monitoring
@@ -280,14 +366,80 @@
 - **Binance Pay Integration:** ✅ Complete - Binance Pay API and manual USDT wallet transfer support implemented
 - **Deployment:** ✅ Complete - Docker setup, Docker Compose, and deployment documentation ready
 - **Threshold Configuration:** ✅ Complete - All detection thresholds configurable via environment variables
+- **New Design System:** ✅ Reference designs created in `/other` folder (home, dashboard, detail pages)
+- **Multi-Chain Support:** ⏳ Planned - Solana, Base, Arbitrum (after UI/UX improvements)
+
+## 🆕 New Features from SmartFlow Roadmap (`/other/Roadmap.md`)
+
+### Additional Features to Consider:
+1. **Multi-Chain Support (Phase 1)**
+   - Ethereum (EVM) ✅ Already supported
+   - Solana ⏳ Planned
+   - Base ⏳ Planned
+   - BNB Chain (BSC) ✅ Already supported
+   - Arbitrum ⏳ Planned
+   - Polygon ✅ Already supported
+
+2. **Pricing Plans (Updated)**
+   - Free: $0/month - 5 alerts/day, delayed data (15 min)
+   - Basic: $49/month - Real-time, 50 alerts/day, 3 chains
+   - Pro: $149/month - All chains, unlimited alerts, Telegram bot
+   - Whale: $499/month - API access, custom alerts, priority support
+
+3. **Data Sources (Cost-Effective Stack)**
+   - Solana: Birdeye.so + Helius.dev
+   - EVM chains: Covalent OR Moralis (already using Moralis)
+   - Whale labeling: Arkham Intelligence (free tier first)
+   - Real-time transactions: WebSocket from Helius, QuickNode, Alchemy
+   - DexScreener API (free)
+   - Bubblemaps API for holder visualization
+
+4. **Alert Channels**
+   - Browser push notifications
+   - Telegram bot (high priority)
+   - Discord webhook
+   - Email (already implemented)
+   - In-app notifications (already implemented)
 - **Database Models:** All Roadmap2.md models are created (SellOffer, WhaleEvent, ExchangeFlow, DexSwapEvent, TokenMetrics, BetaInvitation, Feedback)
 - **API Integrations:** Binance/KuCoin orderbook APIs are implemented
 - **Missing Integrations:** Bitquery, Etherscan/BscScan, The Graph are not yet implemented
 
 ---
 
-**Next Steps:**
-1. Complete Sprint 5 tasks
-2. Finish Roadmap2.md Phase 1 & Phase 3
-3. Then proceed with new blockchain roadmap (Solana, Base, Arbitrum)
+**Next Steps (Updated Priority):**
+1. ✅ Complete Sprint 5 tasks - **DONE**
+2. ✅ Finish Roadmap2.md Phase 1, 2, 3, 4 - **DONE**
+3. ⏳ **UI/UX Improvements** - **CURRENT PRIORITY**
+   - Redesign homepage with SmartFlow branding
+   - Redesign dashboard with multi-chain support
+   - Redesign token detail page with enhanced analytics
+   - Add Alpha Screener, Whale Wallet Tracker, Smart Money Portfolios
+4. Then proceed with new blockchain roadmap (Solana, Base, Arbitrum)
+
+---
+
+## 🎨 New Design System & Branding (SmartFlow)
+
+### Brand Identity
+- **Project Name:** SmartFlow
+- **Logo/Icon:** Purple-to-pink gradient square with TrendingUp icon
+- **Color Scheme:** 
+  - Primary: Purple (#9333ea) to Pink (#ec4899) gradient
+  - Background: Slate-950 via Purple-950 gradient
+  - Accents: Green (positive), Red (negative), Yellow (warnings)
+- **Design Style:** Modern, professional, trader-focused with glassmorphism effects
+
+### Key Design Elements
+- Backdrop blur effects (`backdrop-blur-xl`)
+- Gradient borders (`border-purple-500/20`)
+- Glassmorphism cards (`bg-black/40`)
+- Animated pulse indicators for live data
+- Modern rounded corners (`rounded-2xl`, `rounded-xl`)
+- Smooth transitions and hover effects
+
+### Reference Designs
+- Homepage: `/other/home/page.tsx`
+- Dashboard: `/other/Dashboard/page.tsx`
+- Token Detail: `/other/Detail/page.tsx`
+- Roadmap: `/other/Roadmap.md`
 
