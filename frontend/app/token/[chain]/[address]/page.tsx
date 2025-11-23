@@ -33,22 +33,18 @@ export default function TokenDetailPage() {
     setIsLoading(true);
     setError('');
     try {
-      const [tokenData, signalsData, whaleData] = await Promise.all([
-        api.getTokenByAddress(chain, address),
-        api.getSignals({ tokenId: '', limit: 20 }).catch(() => []), // Will be updated after token is loaded
-        api.getTokenWhaleActivity('', 24).catch(() => null), // Will be updated after token is loaded
-      ]);
-
+      // First, get the token by chain and address
+      const tokenData = await api.getTokenByAddress(chain, address);
       setToken(tokenData);
       
-      // Reload signals and whale activity with token ID
+      // Then load signals and whale activity with token ID
       if (tokenData?.id) {
-        const [updatedSignals, updatedWhale] = await Promise.all([
-          api.getSignals({ tokenId: tokenData.id, limit: 20 }),
-          api.getTokenWhaleActivity(tokenData.id, 24),
+        const [signalsData, whaleData] = await Promise.all([
+          api.getSignals({ tokenId: tokenData.id, limit: 20 }).catch(() => []),
+          api.getTokenWhaleActivity(tokenData.id, 24).catch(() => null),
         ]);
-        setSignals(updatedSignals);
-        setWhaleActivity(updatedWhale);
+        setSignals(signalsData);
+        setWhaleActivity(whaleData);
       }
     } catch (err: any) {
       console.error('Error loading token data:', err);
