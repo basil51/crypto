@@ -14,24 +14,25 @@ datasource db {
 
 // 1. Users table
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  passwordHash      String    @map("password_hash")
-  role              UserRole  @default(USER)
-  plan              PlanType  @default(FREE)
-  stripeCustomerId String?   @map("stripe_customer_id")
-  stripeSubscriptionId String? @map("stripe_subscription_id")
-  subscriptionStatus String? @map("subscription_status") // active, canceled, past_due, etc.
-  subscriptionEndsAt DateTime? @map("subscription_ends_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  passwordHash         String    @map("password_hash")
+  role                 UserRole  @default(USER)
+  plan                 PlanType  @default(FREE)
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  subscriptionStatus   String?   @map("subscription_status") // active, canceled, past_due, etc.
+  subscriptionEndsAt   DateTime? @map("subscription_ends_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  alerts Alert[]
+  alerts          Alert[]
   betaInvitations BetaInvitation[] @relation("InvitedBy")
-  betaInvitation BetaInvitation? @relation("InvitedUser")
-  feedback Feedback[]
-  payments Payment[]
+  betaInvitation  BetaInvitation?  @relation("InvitedUser")
+  feedback        Feedback[]
+  payments        Payment[]
+  dashboards      Dashboard[]
 
   @@map("users")
 }
@@ -63,25 +64,27 @@ enum PaymentStatus {
 
 // 2. Tokens table
 model Token {
-  id             String   @id @default(uuid())
-  chain           String   // e.g., ethereum, bsc
+  id              String   @id @default(uuid())
+  chain           String // e.g., ethereum, bsc
   symbol          String
   name            String
   contractAddress String   @map("contract_address")
   decimals        Int
-  metadata        Json?    // JSONB for flexible fields
+  metadata        Json? // JSONB for flexible fields
   active          Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  walletPositions    WalletPosition[]
-  transactions       Transaction[]
+  walletPositions     WalletPosition[]
+  transactions        Transaction[]
   accumulationSignals AccumulationSignal[]
-  whaleEvents        WhaleEvent[]
-  exchangeFlows      ExchangeFlow[]
-  dexSwapEvents      DexSwapEvent[]
-  tokenMetrics       TokenMetrics[]
-  alerts             Alert[]
+  whaleEvents         WhaleEvent[]
+  exchangeFlows       ExchangeFlow[]
+  dexSwapEvents       DexSwapEvent[]
+  tokenMetrics        TokenMetrics[]
+  alerts              Alert[]
+  whaleClusters       WhaleCluster[]
+  whaleRelationships  WhaleRelationship[]
 
   @@index([chain, active])
   @@map("tokens")
@@ -96,10 +99,10 @@ model Wallet {
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
-  walletPositions WalletPosition[]
-  transactionsFrom Transaction[] @relation("FromWallet")
-  transactionsTo   Transaction[] @relation("ToWallet")
-  whaleEvents     WhaleEvent[]
+  walletPositions  WalletPosition[]
+  transactionsFrom Transaction[]    @relation("FromWallet")
+  transactionsTo   Transaction[]    @relation("ToWallet")
+  whaleEvents      WhaleEvent[]
 
   @@index([address])
   @@map("wallets")
@@ -107,10 +110,10 @@ model Wallet {
 
 // 4. Wallet Positions table (materialized snapshots per window)
 model WalletPosition {
-  id           String   @id @default(uuid())
-  walletId     String   @map("wallet_id")
-  tokenId      String   @map("token_id")
-  balance      Decimal  @db.Decimal(78, 0) // Large precision for crypto amounts
+  id            String   @id @default(uuid())
+  walletId      String   @map("wallet_id")
+  tokenId       String   @map("token_id")
+  balance       Decimal  @db.Decimal(78, 0) // Large precision for crypto amounts
   lastUpdatedAt DateTime @default(now()) @map("last_updated_at")
 
   // Relations
@@ -133,12 +136,12 @@ model Transaction {
   amount      Decimal  @db.Decimal(78, 0)
   blockNumber BigInt   @map("block_number")
   timestamp   DateTime
-  raw         Json?    // JSONB for raw provider payloads
+  raw         Json? // JSONB for raw provider payloads
 
   // Relations
-  token       Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
-  fromWallet  Wallet?  @relation("FromWallet", fields: [fromAddress], references: [address])
-  toWallet    Wallet?  @relation("ToWallet", fields: [toAddress], references: [address])
+  token      Token   @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  fromWallet Wallet? @relation("FromWallet", fields: [fromAddress], references: [address])
+  toWallet   Wallet? @relation("ToWallet", fields: [toAddress], references: [address])
 
   @@unique([txHash, tokenId])
   @@index([tokenId, timestamp])
@@ -150,18 +153,18 @@ model Transaction {
 
 // 6. Accumulation Signals table
 model AccumulationSignal {
-  id            String          @id @default(uuid())
-  tokenId       String          @map("token_id")
-  score         Decimal         @db.Decimal(5, 2) // 0-100 with 2 decimal places
-  signalType    SignalType      @map("signal_type")
-  windowStart   DateTime        @map("window_start")
-  windowEnd     DateTime        @map("window_end")
-  walletsInvolved Json          @map("wallets_involved") // JSONB array
-  metadata      Json?           // JSONB for flexible fields
-  createdAt     DateTime        @default(now()) @map("created_at")
+  id              String     @id @default(uuid())
+  tokenId         String     @map("token_id")
+  score           Decimal    @db.Decimal(5, 2) // 0-100 with 2 decimal places
+  signalType      SignalType @map("signal_type")
+  windowStart     DateTime   @map("window_start")
+  windowEnd       DateTime   @map("window_end")
+  walletsInvolved Json       @map("wallets_involved") // JSONB array
+  metadata        Json? // JSONB for flexible fields
+  createdAt       DateTime   @default(now()) @map("created_at")
 
   // Relations
-  token  Token  @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  token  Token   @relation(fields: [tokenId], references: [id], onDelete: Cascade)
   alerts Alert[]
 
   @@index([signalType, createdAt])
@@ -180,21 +183,21 @@ enum SignalType {
 
 // 7. Alerts table
 model Alert {
-  id         String        @id @default(uuid())
-  userId     String        @map("user_id")
-  alertType  AlertType     @default(SIGNAL) @map("alert_type")
-  signalId   String?       @map("signal_id") // Optional: for SIGNAL type alerts
-  tokenId    String?       @map("token_id")  // Token this alert is about
-  channels   Json          // JSONB: {telegram: true, email: false}
-  metadata   Json?         // JSONB: Additional alert data (whale amount, sell wall size, etc.)
-  createdAt  DateTime      @default(now()) @map("created_at")
-  deliveredAt DateTime?    @map("delivered_at")
-  status     AlertStatus   @default(PENDING)
+  id          String      @id @default(uuid())
+  userId      String      @map("user_id")
+  alertType   AlertType   @default(SIGNAL) @map("alert_type")
+  signalId    String?     @map("signal_id") // Optional: for SIGNAL type alerts
+  tokenId     String?     @map("token_id") // Token this alert is about
+  channels    Json // JSONB: {telegram: true, email: false}
+  metadata    Json? // JSONB: Additional alert data (whale amount, sell wall size, etc.)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  deliveredAt DateTime?   @map("delivered_at")
+  status      AlertStatus @default(PENDING)
 
   // Relations
-  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   signal AccumulationSignal? @relation(fields: [signalId], references: [id], onDelete: Cascade)
-  token  Token?           @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  token  Token?              @relation(fields: [tokenId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([userId, alertType])
@@ -210,14 +213,14 @@ enum AlertStatus {
 }
 
 enum AlertType {
-  SIGNAL              // Original accumulation signal alerts
-  WHALE_BUY          // Large buy detected
-  WHALE_SELL         // Large sell detected
-  EXCHANGE_DEPOSIT   // Large deposit to exchange
+  SIGNAL // Original accumulation signal alerts
+  WHALE_BUY // Large buy detected
+  WHALE_SELL // Large sell detected
+  EXCHANGE_DEPOSIT // Large deposit to exchange
   EXCHANGE_WITHDRAWAL // Large withdrawal from exchange
-  SELL_WALL_CREATED  // New sell wall detected
-  SELL_WALL_REMOVED  // Sell wall removed/dissipated
-  TOKEN_BREAKOUT     // Volume/pump breakout detected
+  SELL_WALL_CREATED // New sell wall detected
+  SELL_WALL_REMOVED // Sell wall removed/dissipated
+  TOKEN_BREAKOUT // Volume/pump breakout detected
 }
 
 // 8. API Usage Log table
@@ -235,16 +238,16 @@ model ApiUsageLog {
 
 // 9. Sell Offer table (Roadmap 2.0)
 model SellOffer {
-  id            String   @id @default(uuid())
-  exchange      String   // binance, kucoin, etc.
-  symbol        String   // e.g., BTCUSDT
-  price         Decimal  @db.Decimal(20, 8)
-  quantity      Decimal  @db.Decimal(20, 8)
-  totalValue    Decimal  @db.Decimal(20, 8) @map("total_value")
-  wallType      String   @map("wall_type") // sell_wall, buy_wall
-  detectedAt    DateTime @default(now()) @map("detected_at")
-  removedAt     DateTime? @map("removed_at")
-  metadata      Json?    // JSONB for orderbook snapshot data
+  id         String    @id @default(uuid())
+  exchange   String // binance, kucoin, etc.
+  symbol     String // e.g., BTCUSDT
+  price      Decimal   @db.Decimal(20, 8)
+  quantity   Decimal   @db.Decimal(20, 8)
+  totalValue Decimal   @map("total_value") @db.Decimal(20, 8)
+  wallType   String    @map("wall_type") // sell_wall, buy_wall
+  detectedAt DateTime  @default(now()) @map("detected_at")
+  removedAt  DateTime? @map("removed_at")
+  metadata   Json? // JSONB for orderbook snapshot data
 
   @@index([exchange, symbol, detectedAt])
   @@index([symbol, detectedAt])
@@ -253,16 +256,16 @@ model SellOffer {
 
 // 10. Whale Event table (Roadmap 2.0)
 model WhaleEvent {
-  id            String      @id @default(uuid())
-  tokenId       String      @map("token_id")
-  walletId      String?     @map("wallet_id")
-  eventType     WhaleEventType @map("event_type")
-  amount        Decimal     @db.Decimal(78, 0)
-  valueUsd      Decimal?    @map("value_usd") @db.Decimal(20, 2)
-  exchange      String?     // if exchange-related
-  direction     String      // buy, sell, deposit, withdrawal
-  timestamp     DateTime
-  metadata      Json?       // JSONB for additional data
+  id        String         @id @default(uuid())
+  tokenId   String         @map("token_id")
+  walletId  String?        @map("wallet_id")
+  eventType WhaleEventType @map("event_type")
+  amount    Decimal        @db.Decimal(78, 0)
+  valueUsd  Decimal?       @map("value_usd") @db.Decimal(20, 2)
+  exchange  String? // if exchange-related
+  direction String // buy, sell, deposit, withdrawal
+  timestamp DateTime
+  metadata  Json? // JSONB for additional data
 
   // Relations
   token  Token   @relation(fields: [tokenId], references: [id], onDelete: Cascade)
@@ -287,13 +290,13 @@ enum WhaleEventType {
 model ExchangeFlow {
   id            String   @id @default(uuid())
   tokenId       String   @map("token_id")
-  exchange      String   // binance, kucoin, etc.
+  exchange      String // binance, kucoin, etc.
   flowType      String   @map("flow_type") // inflow, outflow
   amount        Decimal  @db.Decimal(78, 0)
   valueUsd      Decimal? @map("value_usd") @db.Decimal(20, 2)
   walletAddress String?  @map("wallet_address")
   timestamp     DateTime
-  metadata      Json?    // JSONB for transaction details
+  metadata      Json? // JSONB for transaction details
 
   // Relations
   token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
@@ -308,7 +311,7 @@ model ExchangeFlow {
 model DexSwapEvent {
   id            String   @id @default(uuid())
   tokenId       String   @map("token_id")
-  dex           String   // uniswap, pancakeswap, etc.
+  dex           String // uniswap, pancakeswap, etc.
   poolAddress   String?  @map("pool_address")
   swapType      String   @map("swap_type") // buy, sell
   amountIn      Decimal  @map("amount_in") @db.Decimal(78, 0)
@@ -318,7 +321,7 @@ model DexSwapEvent {
   txHash        String   @map("tx_hash")
   blockNumber   BigInt   @map("block_number")
   timestamp     DateTime
-  metadata      Json?    // JSONB for swap details
+  metadata      Json? // JSONB for swap details
 
   // Relations
   token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
@@ -333,15 +336,15 @@ model DexSwapEvent {
 model TokenMetrics {
   id              String   @id @default(uuid())
   tokenId         String   @map("token_id")
-  priceUsd         Decimal? @map("price_usd") @db.Decimal(20, 8)
+  priceUsd        Decimal? @map("price_usd") @db.Decimal(20, 8)
   marketCap       Decimal? @map("market_cap") @db.Decimal(20, 2)
   volume24h       Decimal? @map("volume_24h") @db.Decimal(20, 2)
-  holdersCount     Int?     @map("holders_count")
+  holdersCount    Int?     @map("holders_count")
   liquidity       Decimal? @db.Decimal(20, 2)
-  whaleScore       Decimal? @map("whale_score") @db.Decimal(5, 2) // 0-100
-  smartMoneyScore  Decimal? @map("smart_money_score") @db.Decimal(5, 2) // 0-100
+  whaleScore      Decimal? @map("whale_score") @db.Decimal(5, 2) // 0-100
+  smartMoneyScore Decimal? @map("smart_money_score") @db.Decimal(5, 2) // 0-100
   recordedAt      DateTime @default(now()) @map("recorded_at")
-  metadata        Json?    // JSONB for additional metrics
+  metadata        Json? // JSONB for additional metrics
 
   // Relations
   token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
@@ -362,11 +365,11 @@ model BetaInvitation {
   expiresAt     DateTime  @map("expires_at")
   acceptedAt    DateTime? @map("accepted_at")
   createdAt     DateTime  @default(now()) @map("created_at")
-  
+
   // Relations
   invitedBy   User  @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
   invitedUser User? @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
-  
+
   @@index([email])
   @@index([code])
   @@index([status])
@@ -377,18 +380,18 @@ model BetaInvitation {
 model Feedback {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
-  type        String   // bug, feature, improvement, other
+  type        String // bug, feature, improvement, other
   title       String
   description String   @db.Text
   status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority    String?  // LOW, MEDIUM, HIGH, CRITICAL
-  metadata    Json?    // JSONB for additional data
+  priority    String? // LOW, MEDIUM, HIGH, CRITICAL
+  metadata    Json? // JSONB for additional data
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, createdAt])
   @@index([status])
   @@index([type])
@@ -397,39 +400,39 @@ model Feedback {
 
 // 16. Payment table (Sprint 5 - Binance Pay)
 model Payment {
-  id                String        @id @default(uuid())
-  userId            String        @map("user_id")
-  plan              PlanType      @default(PRO)
-  paymentMethod     PaymentMethod @map("payment_method")
-  amount            Decimal       @db.Decimal(20, 8)
-  currency          String        @default("USD") // USD for Stripe, USDT for crypto
-  status            PaymentStatus @default(PENDING)
-  
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  plan          PlanType      @default(PRO)
+  paymentMethod PaymentMethod @map("payment_method")
+  amount        Decimal       @db.Decimal(20, 8)
+  currency      String        @default("USD") // USD for Stripe, USDT for crypto
+  status        PaymentStatus @default(PENDING)
+
   // Stripe fields
-  stripePaymentIntentId String?   @map("stripe_payment_intent_id")
-  stripeSessionId       String?   @map("stripe_session_id")
-  
+  stripePaymentIntentId String? @map("stripe_payment_intent_id")
+  stripeSessionId       String? @map("stripe_session_id")
+
   // Binance Pay fields
-  binancePayOrderId     String?   @map("binance_pay_order_id")
-  binancePayPrepayId    String?   @map("binance_pay_prepay_id")
-  
+  binancePayOrderId  String? @map("binance_pay_order_id")
+  binancePayPrepayId String? @map("binance_pay_prepay_id")
+
   // USDT Manual fields
-  usdtAddress            String?   @map("usdt_address")
-  usdtNetwork            String?   @map("usdt_network") // TRC20, ERC20, BEP20
-  usdtAmount             Decimal?  @map("usdt_amount") @db.Decimal(20, 8)
-  usdtTxHash             String?   @map("usdt_tx_hash")
-  usdtConfirmedAt        DateTime? @map("usdt_confirmed_at")
-  
+  usdtAddress     String?   @map("usdt_address")
+  usdtNetwork     String?   @map("usdt_network") // TRC20, ERC20, BEP20
+  usdtAmount      Decimal?  @map("usdt_amount") @db.Decimal(20, 8)
+  usdtTxHash      String?   @map("usdt_tx_hash")
+  usdtConfirmedAt DateTime? @map("usdt_confirmed_at")
+
   // Metadata
-  metadata            Json?        // JSONB for additional payment data
-  expiresAt           DateTime?   @map("expires_at")
-  completedAt         DateTime?   @map("completed_at")
-  createdAt           DateTime    @default(now()) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
-  
+  metadata    Json? // JSONB for additional payment data
+  expiresAt   DateTime? @map("expires_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, status])
   @@index([status, createdAt])
   @@index([paymentMethod, status])
@@ -455,3 +458,112 @@ model Payment {
 //    ...
 //    whaleEvents     WhaleEvent[]
 //  }
+
+// 17. Dashboard table (Roadmap2 Phase 4)
+model Dashboard {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  layout      Json // Grid layout configuration
+  isDefault   Boolean  @default(false) @map("is_default")
+  templateId  String?  @map("template_id") // Reference to template used
+  metadata    Json? // Additional dashboard settings
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@index([userId])
+  @@index([userId, isDefault])
+  @@map("dashboards")
+}
+
+// 18. Dashboard Widget table (Roadmap2 Phase 4)
+model DashboardWidget {
+  id          String   @id @default(uuid())
+  dashboardId String   @map("dashboard_id")
+  widgetType  String   @map("widget_type") // e.g., "price_chart", "whale_activity", "signals", "orderbook"
+  position    Json // { x, y, w, h } for grid layout
+  config      Json? // Widget-specific configuration
+  order       Int      @default(0) // Display order
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@index([dashboardId, order])
+  @@map("dashboard_widgets")
+}
+
+// 19. Dashboard Template table (Roadmap2 Phase 4)
+model DashboardTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  category    String // e.g., "trader", "analyst", "whale_hunter"
+  layout      Json // Default layout configuration
+  widgets     Json // Default widgets configuration
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdBy   String?  @map("created_by") // User ID if custom template
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isPublic])
+  @@map("dashboard_templates")
+}
+
+// 20. Whale Cluster table (Roadmap2 Phase 4)
+model WhaleCluster {
+  id                 String   @id @default(uuid())
+  tokenId            String   @map("token_id")
+  clusterType        String   @map("cluster_type") // "buy_cluster", "sell_cluster", "accumulation_cluster"
+  walletAddresses    Json // Array of wallet addresses in cluster
+  totalValue         Decimal  @map("total_value") @db.Decimal(20, 8)
+  avgTransactionSize Decimal  @map("avg_transaction_size") @db.Decimal(20, 8)
+  firstSeen          DateTime @map("first_seen")
+  lastSeen           DateTime @map("last_seen")
+  transactionCount   Int      @map("transaction_count")
+  metadata           Json? // Cluster analysis data
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, clusterType])
+  @@index([firstSeen])
+  @@index([lastSeen])
+  @@map("whale_clusters")
+}
+
+// 21. Whale Relationship table (Roadmap2 Phase 4)
+model WhaleRelationship {
+  id               String   @id @default(uuid())
+  wallet1Address   String   @map("wallet1_address")
+  wallet2Address   String   @map("wallet2_address")
+  relationshipType String   @map("relationship_type") // "copied_trade", "same_token", "linked_transaction"
+  strength         Decimal  @db.Decimal(5, 2) // 0-100 relationship strength score
+  tokenId          String?  @map("token_id") // Token they both interacted with
+  firstInteraction DateTime @map("first_interaction")
+  lastInteraction  DateTime @map("last_interaction")
+  interactionCount Int      @map("interaction_count")
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  token Token? @relation(fields: [tokenId], references: [id], onDelete: SetNull)
+
+  @@unique([wallet1Address, wallet2Address, relationshipType])
+  @@index([wallet1Address])
+  @@index([wallet2Address])
+  @@index([tokenId])
+  @@map("whale_relationships")
+}
