@@ -101,6 +101,10 @@ class ApiClient {
     return this.request<any>(`/tokens/${id}`);
   }
 
+  async getTokenByAddress(chain: string, address: string) {
+    return this.request<any>(`/tokens/by-address?chain=${chain}&address=${address}`);
+  }
+
   // Alerts endpoints
   async getAlerts() {
     return this.request<any[]>('/alerts');

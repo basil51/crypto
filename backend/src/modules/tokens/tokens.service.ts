@@ -71,6 +71,20 @@ export class TokensService {
     );
   }
 
+  async findByAddress(chain: string, contractAddress: string): Promise<Token | null> {
+    const cacheKey = `tokens:${chain}:${contractAddress.toLowerCase()}`;
+    return this.cacheService.getOrSet(
+      cacheKey,
+      () => this.prisma.token.findFirst({
+        where: {
+          chain: chain.toLowerCase(),
+          contractAddress: contractAddress.toLowerCase(),
+        },
+      }),
+      600, // 10 minutes
+    );
+  }
+
   async update(id: string, data: Prisma.TokenUpdateInput): Promise<Token> {
     const token = await this.prisma.token.update({ where: { id }, data });
     // Invalidate specific token and list caches

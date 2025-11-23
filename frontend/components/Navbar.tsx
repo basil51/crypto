@@ -16,90 +16,88 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 backdrop-blur-md bg-opacity-95 border-b border-purple-500/30 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link href="/" className="flex items-center gap-2 px-2 py-2 text-xl font-bold text-white hover:text-purple-300 transition-colors">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <span>SmartFlow</span>
-            </Link>
-            {isAuthenticated && (
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/dashboard"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/tokens"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Screener
-                </Link>
-                <Link
-                  href="/whales"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Whales
-                </Link>
-                <Link
-                  href="/alerts"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Alerts
-                </Link>
-                <Link
-                  href="/sell-walls"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Sell Walls
-                </Link>
-                <Link
-                  href="/notifications"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Notifications
-                </Link>
-                <Link
-                  href="/billing"
-                  className="border-transparent text-gray-300 hover:text-white hover:border-purple-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
-                >
-                  Billing
-                </Link>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center">
+    <nav className="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-purple-500/20 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-white hover:text-purple-400 transition">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <span>SmartFlow</span>
+          </Link>
+          {isAuthenticated && (
+            <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+              <Link
+                href="/dashboard"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/tokens"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Screener
+              </Link>
+              <Link
+                href="/whales"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Whales
+              </Link>
+              <Link
+                href="/alerts"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Alerts
+              </Link>
+              <Link
+                href="/sell-walls"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Sell Walls
+              </Link>
+              <Link
+                href="/notifications"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Notifications
+              </Link>
+              <Link
+                href="/billing"
+                className="text-white hover:text-purple-400 transition"
+              >
+                Billing
+              </Link>
+            </div>
+          )}
+          <div className="flex items-center gap-4">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+              <>
                 <NotificationBell />
-                <span className="text-sm text-gray-200 font-medium">{user?.email}</span>
+                <span className="text-sm text-white font-medium hidden sm:block">{user?.email}</span>
                 <button
                   onClick={handleLogout}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                  className="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-red-500/50 transition"
                 >
                   Logout
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-4">
+              <>
                 <Link
                   href="/login"
-                  className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="px-4 py-2 text-white hover:text-purple-400 transition"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-purple-500/50 transition"
                 >
-                  Sign Up
+                  Start Free Trial
                 </Link>
-              </div>
+              </>
             )}
           </div>
         </div>

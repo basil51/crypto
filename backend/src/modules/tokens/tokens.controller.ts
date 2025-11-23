@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TokensService } from './tokens.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateTokenDto } from './dto/create-token.dto';
@@ -37,6 +37,21 @@ export class TokensController {
     }
     
     return this.tokensService.findAll(where);
+  }
+
+  @Get('by-address')
+  async findByAddress(
+    @Query('chain') chain: string,
+    @Query('address') address: string,
+  ) {
+    if (!chain || !address) {
+      throw new BadRequestException('chain and address are required');
+    }
+    const token = await this.tokensService.findByAddress(chain, address);
+    if (!token) {
+      throw new NotFoundException(`Token not found for chain ${chain} and address ${address}`);
+    }
+    return token;
   }
 
   @Get(':id')

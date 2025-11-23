@@ -229,7 +229,7 @@ export default function Dashboard() {
                   {hotAccumulations.map((token) => (
                     <Link
                       key={token.tokenId}
-                      href={`/token/${token.chain}/${token.contractAddress || token.symbol}`}
+                      href={`/token/${token.chain.toLowerCase()}/${token.contractAddress || token.symbol}`}
                       className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition cursor-pointer"
                     >
                       <div className="flex items-center gap-4">
