@@ -109,5 +109,134 @@ export class AlertsService {
       orderBy: { id: 'desc' },
     });
   }
+
+  /**
+   * Get user notifications with enriched data
+   */
+  async getUserNotifications(userId: string, limit: number = 50, unreadOnly: boolean = false) {
+    const where: Prisma.AlertWhereInput = {
+      userId,
+    };
+
+    if (unreadOnly) {
+      where.deliveredAt = null;
+    }
+
+    const alerts = await this.prisma.alert.findMany({
+      where,
+      include: {
+        signal: {
+          include: {
+            token: true,
+          },
+        },
+        token: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+
+    // Enrich alerts with formatted data
+    return alerts.map((alert) => {
+      const token = alert.token || alert.signal?.token;
+      return {
+        id: alert.id,
+        alertType: alert.alertType,
+        status: alert.status,
+        createdAt: alert.createdAt,
+        deliveredAt: alert.deliveredAt,
+        isRead: !!alert.deliveredAt,
+        token: token ? {
+          id: token.id,
+          symbol: token.symbol,
+          name: token.name,
+        } : null,
+        metadata: alert.metadata,
+        message: this.formatAlertMessage(alert),
+      };
+    });
+  }
+
+  /**
+   * Get count of unread notifications
+   */
+  async getUnreadCount(userId: string): Promise<number> {
+    return this.prisma.alert.count({
+      where: {
+        userId,
+        deliveredAt: null,
+      },
+    });
+  }
+
+  /**
+   * Mark alert as read
+   */
+  async markAsRead(alertId: string) {
+    return this.prisma.alert.update({
+      where: { id: alertId },
+      data: {
+        deliveredAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Mark all user alerts as read
+   */
+  async markAllAsRead(userId: string) {
+    return this.prisma.alert.updateMany({
+      where: {
+        userId,
+        deliveredAt: null,
+      },
+      data: {
+        deliveredAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Format alert message based on alert type
+   */
+  private formatAlertMessage(alert: any): string {
+    const token = alert.token || alert.signal?.token;
+    const tokenName = token?.symbol || 'Unknown';
+    const metadata = alert.metadata || {};
+
+    switch (alert.alertType) {
+      case 'WHALE_BUY':
+        return `Large buy detected for ${tokenName}: ${this.formatAmount(metadata.amount)}`;
+      case 'WHALE_SELL':
+        return `Large sell detected for ${tokenName}: ${this.formatAmount(metadata.amount)}`;
+      case 'EXCHANGE_DEPOSIT':
+        return `Large deposit to ${metadata.exchange} for ${tokenName}: ${this.formatAmount(metadata.amount)}`;
+      case 'EXCHANGE_WITHDRAWAL':
+        return `Large withdrawal from ${metadata.exchange} for ${tokenName}: ${this.formatAmount(metadata.amount)}`;
+      case 'SELL_WALL_CREATED':
+        return `New sell wall detected for ${tokenName} at $${metadata.price} (${this.formatAmount(metadata.size)} tokens)`;
+      case 'SELL_WALL_REMOVED':
+        return `Sell wall removed for ${tokenName}`;
+      case 'TOKEN_BREAKOUT':
+        return `Breakout detected for ${tokenName}! Volume: ${this.formatAmount(metadata.volume24h)}, Price change: ${metadata.priceChange}%`;
+      case 'SIGNAL':
+      default:
+        return `New signal for ${tokenName}`;
+    }
+  }
+
+  /**
+   * Format large numbers
+   */
+  private formatAmount(amount: number): string {
+    if (!amount) return '0';
+    if (amount >= 1000000) {
+      return `${(amount / 1000000).toFixed(2)}M`;
+    }
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(2)}K`;
+    }
+    return amount.toFixed(2);
+  }
 }
 

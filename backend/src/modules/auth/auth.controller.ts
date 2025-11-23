@@ -12,7 +12,11 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   async register(@Body() registerDto: RegisterDto) {
     try {
-      return await this.authService.register(registerDto.email, registerDto.password);
+      return await this.authService.register(
+        registerDto.email,
+        registerDto.password,
+        registerDto.invitationCode,
+      );
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Email already exists');

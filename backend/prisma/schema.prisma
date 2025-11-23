@@ -28,6 +28,10 @@ model User {
 
   // Relations
   alerts Alert[]
+  betaInvitations BetaInvitation[] @relation("InvitedBy")
+  betaInvitation BetaInvitation? @relation("InvitedUser")
+  feedback Feedback[]
+  payments Payment[]
 
   @@map("users")
 }
@@ -40,6 +44,21 @@ enum UserRole {
 enum PlanType {
   FREE
   PRO
+}
+
+enum PaymentMethod {
+  STRIPE
+  BINANCE_PAY
+  USDT_MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
 }
 
 // 2. Tokens table
@@ -62,6 +81,7 @@ model Token {
   exchangeFlows      ExchangeFlow[]
   dexSwapEvents      DexSwapEvent[]
   tokenMetrics       TokenMetrics[]
+  alerts             Alert[]
 
   @@index([chain, active])
   @@map("tokens")
@@ -162,17 +182,23 @@ enum SignalType {
 model Alert {
   id         String        @id @default(uuid())
   userId     String        @map("user_id")
-  signalId   String        @map("signal_id")
+  alertType  AlertType     @default(SIGNAL) @map("alert_type")
+  signalId   String?       @map("signal_id") // Optional: for SIGNAL type alerts
+  tokenId    String?       @map("token_id")  // Token this alert is about
   channels   Json          // JSONB: {telegram: true, email: false}
+  metadata   Json?         // JSONB: Additional alert data (whale amount, sell wall size, etc.)
   createdAt  DateTime      @default(now()) @map("created_at")
   deliveredAt DateTime?    @map("delivered_at")
   status     AlertStatus   @default(PENDING)
 
   // Relations
   user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  signal AccumulationSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  signal AccumulationSignal? @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  token  Token?           @relation(fields: [tokenId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
+  @@index([userId, alertType])
+  @@index([tokenId, alertType])
   @@index([signalId])
   @@map("alerts")
 }
@@ -181,6 +207,17 @@ enum AlertStatus {
   PENDING
   DELIVERED
   FAILED
+}
+
+enum AlertType {
+  SIGNAL              // Original accumulation signal alerts
+  WHALE_BUY          // Large buy detected
+  WHALE_SELL         // Large sell detected
+  EXCHANGE_DEPOSIT   // Large deposit to exchange
+  EXCHANGE_WITHDRAWAL // Large withdrawal from exchange
+  SELL_WALL_CREATED  // New sell wall detected
+  SELL_WALL_REMOVED  // Sell wall removed/dissipated
+  TOKEN_BREAKOUT     // Volume/pump breakout detected
 }
 
 // 8. API Usage Log table
@@ -312,6 +349,95 @@ model TokenMetrics {
   @@index([tokenId, recordedAt])
   @@index([recordedAt])
   @@map("token_metrics")
+}
+
+// 14. Beta Invitation table (Sprint 5)
+model BetaInvitation {
+  id            String    @id @default(uuid())
+  email         String
+  code          String    @unique
+  invitedById   String    @map("invited_by_id")
+  invitedUserId String?   @unique @map("invited_user_id")
+  status        String    @default("PENDING") // PENDING, ACCEPTED, EXPIRED
+  expiresAt     DateTime  @map("expires_at")
+  acceptedAt    DateTime? @map("accepted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  invitedBy   User  @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedUser User? @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
+  
+  @@index([email])
+  @@index([code])
+  @@index([status])
+  @@map("beta_invitations")
+}
+
+// 15. User Feedback table (Sprint 5)
+model Feedback {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   // bug, feature, improvement, other
+  title       String
+  description String   @db.Text
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String?  // LOW, MEDIUM, HIGH, CRITICAL
+  metadata    Json?    // JSONB for additional data
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([type])
+  @@map("feedback")
+}
+
+// 16. Payment table (Sprint 5 - Binance Pay)
+model Payment {
+  id                String        @id @default(uuid())
+  userId            String        @map("user_id")
+  plan              PlanType      @default(PRO)
+  paymentMethod     PaymentMethod @map("payment_method")
+  amount            Decimal       @db.Decimal(20, 8)
+  currency          String        @default("USD") // USD for Stripe, USDT for crypto
+  status            PaymentStatus @default(PENDING)
+  
+  // Stripe fields
+  stripePaymentIntentId String?   @map("stripe_payment_intent_id")
+  stripeSessionId       String?   @map("stripe_session_id")
+  
+  // Binance Pay fields
+  binancePayOrderId     String?   @map("binance_pay_order_id")
+  binancePayPrepayId    String?   @map("binance_pay_prepay_id")
+  
+  // USDT Manual fields
+  usdtAddress            String?   @map("usdt_address")
+  usdtNetwork            String?   @map("usdt_network") // TRC20, ERC20, BEP20
+  usdtAmount             Decimal?  @map("usdt_amount") @db.Decimal(20, 8)
+  usdtTxHash             String?   @map("usdt_tx_hash")
+  usdtConfirmedAt        DateTime? @map("usdt_confirmed_at")
+  
+  // Metadata
+  metadata            Json?        // JSONB for additional payment data
+  expiresAt           DateTime?   @map("expires_at")
+  completedAt         DateTime?   @map("completed_at")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@index([paymentMethod, status])
+  @@index([stripePaymentIntentId])
+  @@index([binancePayOrderId])
+  @@index([usdtAddress])
+  @@index([usdtTxHash])
+  @@map("payments")
 }
 
 // Add relations to existing models

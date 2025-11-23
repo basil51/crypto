@@ -29,61 +29,98 @@ export class AlertsController {
 
   @Get()
   findAll(@Query('userId') userId?: string, @Request() req?: any) {
-    const where: Prisma.AlertWhereInput = {};
-    if (userId) where.userId = userId;
-    else if (req?.user) where.userId = req.user.userId;
-    // If no userId specified and no user in request, return empty or throw error
-    if (!userId && !req?.user) {
-      throw new BadRequestException('User ID required');
+    // If userId is not provided, use authenticated user's ID
+    const effectiveUserId = userId || req.user?.userId;
+    if (!effectiveUserId) {
+      throw new BadRequestException('User ID is required');
     }
-    return this.alertsService.findAll(where);
+    return this.alertsService.findAll({ userId: effectiveUserId });
   }
 
-  // Specific routes must come before parameterized routes
-  @Get('my-subscriptions')
-  async getMySubscriptions(@Request() req: any) {
-    if (!req.user?.userId) {
-      throw new BadRequestException('User not authenticated');
-    }
-    return this.alertsService.getUserSubscriptions(req.user.userId);
+  @Get('my-notifications')
+  async getMyNotifications(
+    @Request() req: any,
+    @Query('limit') limit?: string,
+    @Query('unreadOnly') unreadOnly?: string,
+  ) {
+    const userId = req.user.userId;
+    const limitNum = limit ? parseInt(limit, 10) : 50;
+    const unreadOnlyBool = unreadOnly === 'true';
+
+    return this.alertsService.getUserNotifications(userId, limitNum, unreadOnlyBool);
   }
 
-  @Post('subscribe')
-  async subscribe(@Body() body: { tokenId: string; channels: { telegram?: boolean; email?: boolean } }, @Request() req: any) {
-    if (!req.user?.userId) {
-      throw new BadRequestException('User not authenticated');
-    }
-    return this.alertsService.subscribeToToken(req.user.userId, body.tokenId, body.channels);
+  @Get('unread-count')
+  async getUnreadCount(@Request() req: any) {
+    const userId = req.user.userId;
+    const count = await this.alertsService.getUnreadCount(userId);
+    return { count };
   }
 
-  @Post('unsubscribe')
-  async unsubscribe(@Body() body: { tokenId: string }, @Request() req: any) {
-    if (!req.user?.userId) {
-      throw new BadRequestException('User not authenticated');
+  @Patch(':id/mark-read')
+  async markAsRead(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.userId;
+    
+    // Verify the alert belongs to the user
+    const alert = await this.alertsService.findOne(id);
+    if (!alert || alert.userId !== userId) {
+      throw new NotFoundException('Alert not found');
     }
-    await this.alertsService.unsubscribeFromToken(req.user.userId, body.tokenId);
-    return { message: 'Unsubscribed successfully' };
+
+    return this.alertsService.markAsRead(id);
+  }
+
+  @Post('mark-all-read')
+  async markAllAsRead(@Request() req: any) {
+    const userId = req.user.userId;
+    return this.alertsService.markAllAsRead(userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req: any) {
     const alert = await this.alertsService.findOne(id);
-    if (!alert) {
-      throw new NotFoundException(`Alert with ID ${id} not found`);
+    
+    // Verify the alert belongs to the authenticated user
+    if (!alert || alert.userId !== req.user.userId) {
+      throw new NotFoundException('Alert not found');
     }
+    
     return alert;
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateAlertDto: Partial<CreateAlertDto>) {
-    try {
-      return await this.alertsService.update(id, updateAlertDto as Prisma.AlertUpdateInput);
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`Alert with ID ${id} not found`);
-      }
-      throw error;
+  async update(
+    @Param('id') id: string,
+    @Body() updateData: any,
+    @Request() req: any,
+  ) {
+    // Verify the alert belongs to the authenticated user
+    const alert = await this.alertsService.findOne(id);
+    if (!alert || alert.userId !== req.user.userId) {
+      throw new NotFoundException('Alert not found');
     }
+
+    return this.alertsService.update(id, updateData);
+  }
+
+  @Post('subscribe')
+  async subscribeToToken(
+    @Request() req: any,
+    @Body() body: { tokenId: string; channels: { telegram?: boolean; email?: boolean } },
+  ) {
+    return this.alertsService.subscribeToToken(req.user.userId, body.tokenId, body.channels);
+  }
+
+  @Post('unsubscribe')
+  async unsubscribeFromToken(
+    @Request() req: any,
+    @Body() body: { tokenId: string },
+  ) {
+    return this.alertsService.unsubscribeFromToken(req.user.userId, body.tokenId);
+  }
+
+  @Get('my-subscriptions')
+  async getMySubscriptions(@Request() req: any) {
+    return this.alertsService.getUserSubscriptions(req.user.userId);
   }
 }
-

@@ -1,13 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject, forwardRef, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { BetaService } from '../beta/beta.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @Optional() @Inject(forwardRef(() => BetaService))
+    private betaService?: BetaService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -36,12 +39,23 @@ export class AuthService {
     return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 
-  async register(email: string, password: string) {
+  async register(email: string, password: string, invitationCode?: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await this.usersService.create({
       email,
       passwordHash: hashedPassword,
     });
+
+    // If invitation code provided, accept it
+    if (invitationCode && this.betaService) {
+      try {
+        await this.betaService.acceptInvitation(invitationCode, user.id);
+      } catch (error) {
+        // Log error but don't fail registration
+        console.error('Failed to accept invitation:', error);
+      }
+    }
+
     return this.login(user);
   }
 }

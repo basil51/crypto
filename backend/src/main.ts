@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { SentryService } from './common/monitoring/sentry.service';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
@@ -15,8 +15,12 @@ async function bootstrap() {
   });
   app.setGlobalPrefix('api');
   
-  // Global exception filter
-  app.useGlobalFilters(new AllExceptionsFilter());
+  // Initialize Sentry (must be done before other middleware)
+  const sentryService = app.get(SentryService);
+  sentryService.onModuleInit();
+  
+  // Note: Global filters and interceptors are registered via APP_FILTER and APP_INTERCEPTOR
+  // in AppModule, so we don't need to register them here manually
   
   // Enable validation globally (skip for webhook routes)
   app.useGlobalPipes(

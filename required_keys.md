@@ -46,6 +46,16 @@ This file tracks all API keys and configuration required for the Crypto Accumula
 
 ---
 
+## 📊 Monitoring Keys (Optional)
+
+### Sentry DSN
+- **Variable:** `SENTRY_DSN`
+- **Purpose:** Error tracking and performance monitoring
+- **Sign up:** https://sentry.io/
+- **Free tier:** Yes (5,000 events/month)
+- **Status:** 🟡 Optional - Recommended for production
+- **Additional:** `SENTRY_RELEASE` - Release version (optional)
+
 ## 🔔 Optional Keys (Enhanced Features)
 
 ### 6. **CoinGecko API Key**
@@ -83,6 +93,21 @@ This file tracks all API keys and configuration required for the Crypto Accumula
 - **Sign up:** https://stripe.com/
 - **Free tier:** Test mode available
 - **Status:** 🟡 Optional - For billing features
+
+### 11. **Binance Pay API Keys**
+- **Variables:** `BINANCE_PAY_API_KEY`, `BINANCE_PAY_SECRET_KEY`
+- **Purpose:** USDT payment processing via Binance Pay
+- **Sign up:** https://www.binance.com/en/binancepay
+- **Free tier:** Yes (with merchant account)
+- **Status:** 🟡 Optional - For USDT payments via Binance Pay
+- **Note:** Alternative to Stripe for crypto-native users
+
+### 12. **USDT Wallet Address (Manual Payments)**
+- **Variable:** `USDT_WALLET_ADDRESS`
+- **Purpose:** USDT wallet address for manual payment transfers
+- **Network:** `USDT_NETWORK` (TRC20, ERC20, or BEP20)
+- **Status:** 🟡 Optional - For manual USDT payment method
+- **Note:** Required if using USDT_MANUAL payment method
 
 ---
 

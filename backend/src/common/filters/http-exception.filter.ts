@@ -4,11 +4,18 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { SentryService } from '../monitoring/sentry.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  constructor(
+    @Optional() @Inject(SentryService) private readonly sentryService?: SentryService,
+  ) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -23,6 +30,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getResponse()
         : 'Internal server error';
+
+    // Send to Sentry for server errors (5xx) or unexpected errors
+    if (this.sentryService && (status >= 500 || !(exception instanceof HttpException))) {
+      this.sentryService.captureException(exception, {
+        request: {
+          method: request.method,
+          url: request.url,
+          headers: request.headers,
+          body: request.body,
+          query: request.query,
+          params: request.params,
+        },
+        user: (request as any).user,
+      });
+    }
 
     response.status(status).json({
       statusCode: status,

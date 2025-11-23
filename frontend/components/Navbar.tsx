@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -65,6 +66,7 @@ export default function Navbar() {
           <div className="flex items-center">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                <NotificationBell />
                 <span className="text-sm text-gray-200 font-medium">{user?.email}</span>
                 <button
                   onClick={handleLogout}

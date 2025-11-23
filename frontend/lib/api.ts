@@ -179,6 +179,61 @@ class ApiClient {
   async getCurrentUser() {
     return this.request<any>('/users/me');
   }
+
+  // Payment endpoints
+  async createPayment(plan: string, paymentMethod: string, amount: number, currency?: string) {
+    return this.request<any>('/payments', {
+      method: 'POST',
+      body: JSON.stringify({ plan, paymentMethod, amount, currency }),
+    });
+  }
+
+  async getMyPayments(status?: string) {
+    const query = status ? `?status=${status}` : '';
+    return this.request<any[]>(`/payments/my${query}`);
+  }
+
+  async getPayment(paymentId: string) {
+    return this.request<any>(`/payments/${paymentId}`);
+  }
+
+  async createBinancePayOrder(plan: string, amount: number, currency?: string) {
+    return this.request<any>('/payments/binance-pay/create', {
+      method: 'POST',
+      body: JSON.stringify({ plan, amount, currency }),
+    });
+  }
+
+  async verifyUSDTPayment(paymentId: string, txHash: string) {
+    return this.request<any>(`/payments/${paymentId}/verify-usdt`, {
+      method: 'POST',
+      body: JSON.stringify({ txHash }),
+    });
+  }
+
+  // Notification endpoints
+  async getMyNotifications(limit?: number, unreadOnly?: boolean) {
+    const query = new URLSearchParams();
+    if (limit) query.append('limit', limit.toString());
+    if (unreadOnly) query.append('unreadOnly', 'true');
+    return this.request<any[]>(`/alerts/my-notifications?${query.toString()}`);
+  }
+
+  async getUnreadNotificationCount() {
+    return this.request<{ count: number }>('/alerts/unread-count');
+  }
+
+  async markNotificationAsRead(notificationId: string) {
+    return this.request<any>(`/alerts/${notificationId}/mark-read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsAsRead() {
+    return this.request<any>('/alerts/mark-all-read', {
+      method: 'POST',
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

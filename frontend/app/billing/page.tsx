@@ -7,11 +7,15 @@ import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
+type PaymentMethod = 'STRIPE' | 'BINANCE_PAY' | 'USDT_MANUAL';
+
 export default function BillingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('STRIPE');
+  const [usdtPayment, setUsdtPayment] = useState<any>(null);
 
   useEffect(() => {
     loadUserInfo();
@@ -29,12 +33,47 @@ export default function BillingPage() {
   const handleSubscribe = async (plan: string = 'PRO') => {
     setLoading(true);
     try {
-      const response = await api.createCheckoutSession(plan);
-      // Redirect to Stripe checkout
-      window.location.href = response.url;
+      if (selectedPaymentMethod === 'STRIPE') {
+        const response = await api.createCheckoutSession(plan);
+        // Redirect to Stripe checkout
+        window.location.href = response.url;
+      } else if (selectedPaymentMethod === 'BINANCE_PAY') {
+        const response = await api.createBinancePayOrder(plan, 29, 'USDT');
+        // Redirect to Binance Pay QR code or payment page
+        if (response.qrCodeUrl) {
+          window.open(response.qrCodeUrl, '_blank');
+        } else {
+          alert('Binance Pay order created. Please check your payment status.');
+        }
+        setLoading(false);
+      } else if (selectedPaymentMethod === 'USDT_MANUAL') {
+        // Create payment and show USDT address
+        const payment = await api.createPayment(plan, 'USDT_MANUAL', 29, 'USDT');
+        setUsdtPayment(payment);
+        setLoading(false);
+      }
     } catch (error: any) {
-      console.error('Error creating checkout session:', error);
-      alert(error.message || 'Failed to create checkout session');
+      console.error('Error creating payment:', error);
+      alert(error.message || 'Failed to create payment');
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyUSDT = async (paymentId: string, txHash: string) => {
+    if (!txHash.trim()) {
+      alert('Please enter transaction hash');
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.verifyUSDTPayment(paymentId, txHash);
+      alert('Payment verification submitted. Your subscription will be activated once confirmed.');
+      setUsdtPayment(null);
+      await loadUserInfo();
+    } catch (error: any) {
+      console.error('Error verifying payment:', error);
+      alert(error.message || 'Failed to verify payment');
+    } finally {
       setLoading(false);
     }
   };
@@ -148,7 +187,7 @@ export default function BillingPage() {
                     <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Popular</span>
                   </div>
                   <div className="text-3xl font-bold mb-4">$29<span className="text-lg text-gray-600">/month</span></div>
-                  <ul className="space-y-2 mb-6">
+                  <ul className="space-y-2 mb-4">
                     <li className="flex items-center">
                       <span className="text-green-500 mr-2">✓</span>
                       All Free features
@@ -170,12 +209,103 @@ export default function BillingPage() {
                       Priority support
                     </li>
                   </ul>
+
+                  {/* Payment Method Selection */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <select
+                      value={selectedPaymentMethod}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="STRIPE">Credit Card (Stripe)</option>
+                      <option value="BINANCE_PAY">Binance Pay (USDT)</option>
+                      <option value="USDT_MANUAL">USDT Manual Transfer</option>
+                    </select>
+                  </div>
+
                   <button
                     onClick={() => handleSubscribe('PRO')}
                     disabled={loading}
                     className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
                   >
                     {loading ? 'Processing...' : 'Subscribe to Pro'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* USDT Manual Payment Modal */}
+            {usdtPayment && (
+              <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover border-2 border-yellow-500">
+                <h2 className="text-xl font-semibold mb-4 text-yellow-700">USDT Payment Instructions</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Address</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={usdtPayment.usdtAddress || ''}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(usdtPayment.usdtAddress || '');
+                          alert('Address copied to clipboard!');
+                        }}
+                        className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Network</label>
+                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                      {usdtPayment.usdtNetwork || 'TRC20'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold">
+                      {usdtPayment.usdtAmount ? Number(usdtPayment.usdtAmount).toFixed(2) : '29.00'} USDT
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Important:</strong> Send exactly {usdtPayment.usdtAmount ? Number(usdtPayment.usdtAmount).toFixed(2) : '29.00'} USDT to the address above using {usdtPayment.usdtNetwork || 'TRC20'} network. 
+                      Payment expires in 15 minutes.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Hash (after sending)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="txHash"
+                        placeholder="Enter transaction hash"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <button
+                        onClick={() => {
+                          const txHash = (document.getElementById('txHash') as HTMLInputElement)?.value;
+                          if (txHash) {
+                            handleVerifyUSDT(usdtPayment.id, txHash);
+                          }
+                        }}
+                        disabled={loading}
+                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                      >
+                        Verify Payment
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setUsdtPayment(null)}
+                    className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>

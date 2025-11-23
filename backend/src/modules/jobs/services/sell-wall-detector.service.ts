@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { OrderbookService } from '../../orderbook/orderbook.service';
 import { CacheService } from '../../../common/cache/cache.service';
+import { EnhancedAlertTriggerService } from '../../alerts/services/enhanced-alert-trigger.service';
 
 @Injectable()
 export class SellWallDetectorService {
@@ -14,6 +15,7 @@ export class SellWallDetectorService {
     private prisma: PrismaService,
     private orderbookService: OrderbookService,
     private cacheService: CacheService,
+    private alertTrigger: EnhancedAlertTriggerService,
   ) {}
 
   /**
@@ -189,7 +191,7 @@ export class SellWallDetectorService {
       });
     } else {
       // Create new wall
-      await this.prisma.sellOffer.create({
+      const newWall = await this.prisma.sellOffer.create({
         data: {
           exchange,
           symbol: exchangeSymbol, // Store exchange symbol (e.g., BTCUSDT)
@@ -205,6 +207,23 @@ export class SellWallDetectorService {
           },
         },
       });
+
+      // Trigger sell wall created alert
+      try {
+        await this.alertTrigger.triggerSellWallCreatedAlert(
+          token.id,
+          newWall.id,
+          Number(wall.quantity),
+          wall.price,
+          exchange,
+          {
+            totalValue: wall.totalValue,
+            priceRange: wall.priceRange,
+          },
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to trigger sell wall alert: ${error.message}`);
+      }
     }
   }
 
@@ -240,6 +259,24 @@ export class SellWallDetectorService {
           where: { id: wall.id },
           data: { removedAt: new Date() },
         });
+
+        // Trigger sell wall removed alert
+        const tokenId = (wall.metadata as any)?.tokenId;
+        if (tokenId) {
+          try {
+            await this.alertTrigger.triggerSellWallRemovedAlert(
+              tokenId,
+              wall.id,
+              {
+                price: Number(wall.price),
+                quantity: Number(wall.quantity),
+                totalValue: Number(wall.totalValue),
+              },
+            );
+          } catch (error) {
+            this.logger.warn(`Failed to trigger sell wall removed alert: ${error.message}`);
+          }
+        }
       }
     }
   }

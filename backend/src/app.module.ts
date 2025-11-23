@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -20,6 +20,12 @@ import { WhalesModule } from './modules/whales/whales.module';
 import { OrderbookModule } from './modules/orderbook/orderbook.module';
 import { SellWallsModule } from './modules/sell-walls/sell-walls.module';
 import { HealthModule } from './modules/health/health.module';
+import { BetaModule } from './modules/beta/beta.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
+import { MonitoringModule } from './common/monitoring/monitoring.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { MonitoringInterceptor } from './common/monitoring/monitoring.interceptor';
 
 @Module({
   imports: [
@@ -53,6 +59,10 @@ import { HealthModule } from './modules/health/health.module';
     OrderbookModule,
     SellWallsModule,
     HealthModule,
+    BetaModule,
+    FeedbackModule,
+    MonitoringModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -60,6 +70,14 @@ import { HealthModule } from './modules/health/health.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MonitoringInterceptor,
     },
   ],
 })

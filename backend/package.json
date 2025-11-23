@@ -35,6 +35,8 @@
     "@nestjs/throttler": "^6.4.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
+    "@sentry/node": "^10.26.0",
+    "@sentry/profiling-node": "^10.26.0",
     "@stripe/stripe-js": "^8.5.2",
     "@types/ioredis": "^5.0.0",
     "@types/ws": "^8.18.1",
