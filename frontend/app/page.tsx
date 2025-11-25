@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Zap, ArrowRight, BarChart3, Wallet, Search } from 'lucide-react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
 
 interface TopToken {
@@ -91,29 +92,7 @@ export default function Homepage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-purple-500/20 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold">SmartFlow</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/dashboard" className="hover:text-purple-400 transition">Dashboard</Link>
-            <Link href="/whales" className="hover:text-purple-400 transition">Whales</Link>
-            <Link href="/tokens" className="hover:text-purple-400 transition">Screener</Link>
-            <Link href="/billing" className="hover:text-purple-400 transition">Pricing</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="px-4 py-2 hover:text-purple-400 transition">Login</Link>
-            <Link href="/register" className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition">
-              Start Free Trial
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
@@ -211,7 +190,7 @@ export default function Homepage() {
                 {topTokens.map((token) => (
                   <Link
                     key={token.rank}
-                    href={`/token/${token.chain.toLowerCase()}/${token.contractAddress || token.symbol}`}
+                    href={`/token/${token.chain.toLowerCase()}/${token.contractAddress === '0x0000000000000000000000000000000000000000' ? token.symbol.toLowerCase() : (token.contractAddress || token.symbol.toLowerCase())}`}
                     className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition cursor-pointer"
                   >
                     <div className="flex items-center gap-4">

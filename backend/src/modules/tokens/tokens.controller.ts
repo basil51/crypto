@@ -54,6 +54,76 @@ export class TokensController {
     return token;
   }
 
+  @Get('by-symbol')
+  async findBySymbol(
+    @Query('chain') chain: string,
+    @Query('symbol') symbol: string,
+  ) {
+    if (!chain || !symbol) {
+      throw new BadRequestException('chain and symbol are required');
+    }
+    const token = await this.tokensService.findBySymbol(chain, symbol);
+    if (!token) {
+      throw new NotFoundException(`Token not found for chain ${chain} and symbol ${symbol}`);
+    }
+    return token;
+  }
+
+  @Get(':id/price-history')
+  async getPriceHistory(
+    @Param('id') id: string,
+    @Query('timeframe') timeframe?: string,
+  ) {
+    return this.tokensService.getPriceHistory(id, timeframe || '24h');
+  }
+
+  @Get('alpha-screener')
+  async alphaScreener(
+    @Query('chain') chain?: string,
+    @Query('minAge') minAge?: string,
+    @Query('maxAge') maxAge?: string,
+    @Query('minVolume24h') minVolume24h?: string,
+    @Query('maxVolume24h') maxVolume24h?: string,
+    @Query('minMarketCap') minMarketCap?: string,
+    @Query('maxMarketCap') maxMarketCap?: string,
+    @Query('minWhaleInflowPercent') minWhaleInflowPercent?: string,
+    @Query('minAccumulationScore') minAccumulationScore?: string,
+    @Query('minSmartWallets') minSmartWallets?: string,
+    @Query('preset') preset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Query('limit') limit?: string,
+  ) {
+    const filters: any = {};
+    if (chain) filters.chain = chain;
+    if (minAge) filters.minAge = parseInt(minAge);
+    if (maxAge) filters.maxAge = parseInt(maxAge);
+    if (minVolume24h) filters.minVolume24h = parseFloat(minVolume24h);
+    if (maxVolume24h) filters.maxVolume24h = parseFloat(maxVolume24h);
+    if (minMarketCap) filters.minMarketCap = parseFloat(minMarketCap);
+    if (maxMarketCap) filters.maxMarketCap = parseFloat(maxMarketCap);
+    if (minWhaleInflowPercent)
+      filters.minWhaleInflowPercent = parseFloat(minWhaleInflowPercent);
+    if (minAccumulationScore)
+      filters.minAccumulationScore = parseFloat(minAccumulationScore);
+    if (minSmartWallets) filters.minSmartWallets = parseInt(minSmartWallets);
+    if (preset) filters.preset = preset;
+    if (sortBy) filters.sortBy = sortBy;
+    if (sortOrder) filters.sortOrder = sortOrder;
+    if (limit) filters.limit = parseInt(limit);
+
+    return this.tokensService.alphaScreener(filters);
+  }
+
+  @Get(':id/current-price')
+  async getCurrentPrice(@Param('id') id: string) {
+    const price = await this.tokensService.getCurrentPrice(id);
+    if (price === null) {
+      throw new NotFoundException(`Price not available for token ${id}`);
+    }
+    return { price };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const token = await this.tokensService.findOne(id);

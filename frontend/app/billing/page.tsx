@@ -97,41 +97,41 @@ export default function BillingPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
         <Navbar />
         <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold gradient-text mb-2">Subscription & Billing</h1>
-              <p className="text-gray-600 text-lg">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">Subscription & Billing</h1>
+              <p className="text-gray-300 text-lg">
                 Manage your subscription and access premium features
               </p>
             </div>
 
             {/* Current Plan Status */}
-            <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
-              <h2 className="text-xl font-semibold mb-4">Current Plan</h2>
+            <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-white">Current Plan</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl font-bold text-white">
                     {isPro ? 'Pro Plan' : 'Free Plan'}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-gray-300 mt-1">
                     {isPro ? (
                       <>
                         {userInfo?.subscriptionStatus === 'active' ? (
-                          <span className="text-green-600">Active</span>
+                          <span className="text-green-400">Active</span>
                         ) : (
-                          <span className="text-yellow-600">Expiring Soon</span>
+                          <span className="text-yellow-400">Expiring Soon</span>
                         )}
                         {userInfo?.subscriptionEndsAt && (
-                          <span className="ml-2">
+                          <span className="ml-2 text-gray-400">
                             • Renews {new Date(userInfo.subscriptionEndsAt).toLocaleDateString()}
                           </span>
                         )}
                       </>
                     ) : (
-                      'Limited features available'
+                      <span className="text-gray-400">Limited features available</span>
                     )}
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export default function BillingPage() {
                   <button
                     onClick={handleManageBilling}
                     disabled={loading}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-colors"
                   >
                     {loading ? 'Loading...' : 'Manage Subscription'}
                   </button>
@@ -151,72 +151,72 @@ export default function BillingPage() {
             {!isPro && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Free Plan */}
-                <div className="glass shadow-soft rounded-xl p-6 card-hover">
-                  <h3 className="text-xl font-semibold mb-2">Free Plan</h3>
-                  <div className="text-3xl font-bold mb-4">$0<span className="text-lg text-gray-600">/month</span></div>
+                <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6">
+                  <h3 className="text-xl font-semibold mb-2 text-white">Free Plan</h3>
+                  <div className="text-3xl font-bold mb-4 text-white">$0<span className="text-lg text-gray-400">/month</span></div>
                   <ul className="space-y-2 mb-6">
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Basic signal alerts
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Dashboard access
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Token listings
                     </li>
-                    <li className="flex items-center text-gray-400">
+                    <li className="flex items-center text-gray-500">
                       <span className="mr-2">✗</span>
                       Premium features
                     </li>
                   </ul>
                   <button
                     disabled
-                    className="w-full px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+                    className="w-full px-4 py-2 bg-gray-500/20 text-gray-500 rounded-lg cursor-not-allowed border border-gray-500/30"
                   >
                     Current Plan
                   </button>
                 </div>
 
                 {/* Pro Plan */}
-                <div className="glass shadow-soft rounded-xl p-6 card-hover border-2 border-purple-500">
+                <div className="bg-black/40 border-2 border-purple-500/50 rounded-2xl backdrop-blur-xl p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-semibold">Pro Plan</h3>
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Popular</span>
+                    <h3 className="text-xl font-semibold text-white">Pro Plan</h3>
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded border border-purple-500/30">Popular</span>
                   </div>
-                  <div className="text-3xl font-bold mb-4">$29<span className="text-lg text-gray-600">/month</span></div>
+                  <div className="text-3xl font-bold mb-4 text-white">$29<span className="text-lg text-gray-400">/month</span></div>
                   <ul className="space-y-2 mb-4">
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       All Free features
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Whale activity tracking
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Sell wall alerts
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Advanced analytics
                     </li>
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2">✓</span>
+                    <li className="flex items-center text-gray-300">
+                      <span className="text-green-400 mr-2">✓</span>
                       Priority support
                     </li>
                   </ul>
 
                   {/* Payment Method Selection */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
                     <select
                       value={selectedPaymentMethod}
                       onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-black/40 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="STRIPE">Credit Card (Stripe)</option>
                       <option value="BINANCE_PAY">Binance Pay (USDT)</option>
@@ -227,7 +227,7 @@ export default function BillingPage() {
                   <button
                     onClick={() => handleSubscribe('PRO')}
                     disabled={loading}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-colors"
                   >
                     {loading ? 'Processing...' : 'Subscribe to Pro'}
                   </button>
@@ -237,55 +237,55 @@ export default function BillingPage() {
 
             {/* USDT Manual Payment Modal */}
             {usdtPayment && (
-              <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover border-2 border-yellow-500">
-                <h2 className="text-xl font-semibold mb-4 text-yellow-700">USDT Payment Instructions</h2>
+              <div className="bg-black/40 border-2 border-yellow-500/50 rounded-2xl backdrop-blur-xl p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-4 text-yellow-400">USDT Payment Instructions</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Address</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Payment Address</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={usdtPayment.usdtAddress || ''}
                         readOnly
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
+                        className="flex-1 px-3 py-2 border border-purple-500/30 rounded-lg bg-black/40 text-white font-mono text-sm"
                       />
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(usdtPayment.usdtAddress || '');
                           alert('Address copied to clipboard!');
                         }}
-                        className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                        className="px-3 py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg hover:bg-purple-500/30"
                       >
                         Copy
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Network</label>
-                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Network</label>
+                    <div className="px-3 py-2 border border-purple-500/30 rounded-lg bg-black/40 text-white">
                       {usdtPayment.usdtNetwork || 'TRC20'}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Amount</label>
+                    <div className="px-3 py-2 border border-purple-500/30 rounded-lg bg-black/40 text-white font-semibold">
                       {usdtPayment.usdtAmount ? Number(usdtPayment.usdtAmount).toFixed(2) : '29.00'} USDT
                     </div>
                   </div>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm text-yellow-800">
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                    <p className="text-sm text-yellow-400">
                       <strong>Important:</strong> Send exactly {usdtPayment.usdtAmount ? Number(usdtPayment.usdtAmount).toFixed(2) : '29.00'} USDT to the address above using {usdtPayment.usdtNetwork || 'TRC20'} network. 
                       Payment expires in 15 minutes.
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Hash (after sending)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Transaction Hash (after sending)</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         id="txHash"
                         placeholder="Enter transaction hash"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="flex-1 px-3 py-2 border border-purple-500/30 rounded-lg bg-black/40 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                       <button
                         onClick={() => {
@@ -295,7 +295,7 @@ export default function BillingPage() {
                           }
                         }}
                         disabled={loading}
-                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                        className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 transition-colors"
                       >
                         Verify Payment
                       </button>
@@ -303,7 +303,7 @@ export default function BillingPage() {
                   </div>
                   <button
                     onClick={() => setUsdtPayment(null)}
-                    className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    className="w-full px-4 py-2 bg-gray-500/20 border border-gray-500/30 text-gray-300 rounded-lg hover:bg-gray-500/30"
                   >
                     Cancel
                   </button>
@@ -312,42 +312,42 @@ export default function BillingPage() {
             )}
 
             {/* Features Comparison */}
-            <div className="glass shadow-soft rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Feature Comparison</h2>
+            <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6">
+              <h2 className="text-xl font-semibold mb-4 text-white">Feature Comparison</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-purple-500/20">
+                  <thead className="bg-purple-500/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Feature</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Free</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Pro</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Feature</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Free</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Pro</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">Signal Alerts</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm">Basic</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-semibold text-green-600">All Types</td>
+                  <tbody className="divide-y divide-purple-500/20">
+                    <tr className="hover:bg-purple-500/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">Signal Alerts</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-300">Basic</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-semibold text-green-400">All Types</td>
                     </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">Whale Activity</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">✗</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600">✓</td>
+                    <tr className="hover:bg-purple-500/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">Whale Activity</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">✗</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-400">✓</td>
                     </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">Sell Wall Detection</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">✗</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600">✓</td>
+                    <tr className="hover:bg-purple-500/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">Sell Wall Detection</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">✗</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-400">✓</td>
                     </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">Advanced Analytics</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">✗</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600">✓</td>
+                    <tr className="hover:bg-purple-500/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">Advanced Analytics</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">✗</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-400">✓</td>
                     </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">API Access</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">✗</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600">✓</td>
+                    <tr className="hover:bg-purple-500/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">API Access</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">✗</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-green-400">✓</td>
                     </tr>
                   </tbody>
                 </table>

@@ -7,11 +7,12 @@ import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import { TrendingUp, ArrowLeft, Star, Bell, Share2, ExternalLink, Users, Wallet, BarChart3, Activity, CheckCircle, Flame, Target } from 'lucide-react';
+import PriceVolumeChart from '@/components/PriceVolumeChart';
 
 export default function TokenDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const chain = params.chain as string;
+  const chain = (params.chain as string)?.toLowerCase();
   const address = params.address as string;
   
   const [activeTab, setActiveTab] = useState('transactions');
@@ -20,6 +21,8 @@ export default function TokenDetailPage() {
   const [token, setToken] = useState<any>(null);
   const [signals, setSignals] = useState<any[]>([]);
   const [whaleActivity, setWhaleActivity] = useState<any>(null);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  const [isLoadingChart, setIsLoadingChart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -29,12 +32,28 @@ export default function TokenDetailPage() {
     }
   }, [chain, address]);
 
+  useEffect(() => {
+    if (token?.id) {
+      loadPriceHistory();
+    }
+  }, [token?.id, chartTimeframe]);
+
   const loadTokenData = async () => {
     setIsLoading(true);
     setError('');
     try {
-      // First, get the token by chain and address
-      const tokenData = await api.getTokenByAddress(chain, address);
+      // Check if the address parameter is actually an address (starts with 0x) or a symbol
+      const isAddress = address.startsWith('0x');
+      let tokenData;
+      
+      if (isAddress) {
+        // It's a contract address
+        tokenData = await api.getTokenByAddress(chain, address);
+      } else {
+        // It's a symbol (like "CAKE", "ETH", etc.)
+        tokenData = await api.getTokenBySymbol(chain, address);
+      }
+      
       setToken(tokenData);
       
       // Then load signals and whale activity with token ID
@@ -51,6 +70,23 @@ export default function TokenDetailPage() {
       setError(err.message || 'Failed to load token data');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadPriceHistory = async () => {
+    if (!token?.id) return;
+    
+    setIsLoadingChart(true);
+    try {
+      // Map UI timeframe to API timeframe
+      const apiTimeframe = chartTimeframe.toLowerCase().replace('h', 'h').replace('d', 'd').replace('y', 'y');
+      const history = await api.getTokenPriceHistory(token.id, apiTimeframe);
+      setPriceHistory(history);
+    } catch (err: any) {
+      console.error('Error loading price history:', err);
+      setPriceHistory([]);
+    } finally {
+      setIsLoadingChart(false);
     }
   };
 
@@ -107,9 +143,9 @@ export default function TokenDetailPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
           <Navbar />
           <main className="max-w-[1600px] mx-auto pt-24 pb-6 px-6">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center">
               <h1 className="text-2xl font-bold mb-4">Token Not Found</h1>
-              <p className="text-gray-400 mb-4">{error || `Token not found for ${chain} chain and address ${address}`}</p>
+              <p className="text-gray-400 mb-4">{error || `Token not found for ${chain} chain and ${address.startsWith('0x') ? 'address' : 'symbol'} ${address}`}</p>
               <Link href="/tokens" className="text-purple-400 hover:text-purple-300">
                 Back to Tokens
               </Link>
@@ -129,7 +165,7 @@ export default function TokenDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
         <Navbar />
         
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
+        <div className="max-w-[1600px] mx-auto pt-24 pb-8 px-6">
           {/* Token Header */}
           <div className="mb-8">
             <div className="flex items-start justify-between mb-6">
@@ -158,15 +194,21 @@ export default function TokenDetailPage() {
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <span>{token.name}</span>
                     <span>•</span>
-                    <span className="font-mono">{address.slice(0, 10)}...{address.slice(-8)}</span>
-                    <a
-                      href={`https://${chain === 'ethereum' ? 'etherscan.io' : chain === 'bsc' ? 'bscscan.com' : 'polygonscan.com'}/token/${address}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-purple-400 transition"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                    {token.contractAddress && token.contractAddress !== '0x0000000000000000000000000000000000000000' ? (
+                      <>
+                        <span className="font-mono">{token.contractAddress.slice(0, 10)}...{token.contractAddress.slice(-8)}</span>
+                        <a
+                          href={`https://${chain === 'ethereum' ? 'etherscan.io' : chain === 'bsc' ? 'bscscan.com' : chain === 'polygon' ? 'polygonscan.com' : 'etherscan.io'}/token/${token.contractAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-purple-400 transition"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </>
+                    ) : (
+                      <span className="text-gray-500 italic">Native Token</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,13 +325,16 @@ export default function TokenDetailPage() {
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center justify-center h-[400px] text-gray-400">
-                  <div className="text-center">
-                    <BarChart3 className="w-20 h-20 mx-auto mb-4 opacity-30" />
-                    <p>Chart integration coming soon</p>
-                    <p className="text-sm">(TradingView or Recharts)</p>
+                {isLoadingChart ? (
+                  <div className="flex items-center justify-center h-[400px] text-gray-400">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                      <p>Loading chart data...</p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <PriceVolumeChart data={priceHistory} timeframe={chartTimeframe} />
+                )}
               </div>
             </div>
 

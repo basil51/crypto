@@ -31,6 +31,8 @@ export class AuthService {
         email: user.email,
         role: user.role,
         plan: user.plan,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionEndsAt: user.subscriptionEndsAt,
       },
     };
   }

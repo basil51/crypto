@@ -60,31 +60,31 @@ export default function TokensPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
         <Navbar />
         <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold gradient-text mb-2">Tokens</h1>
-              <p className="text-gray-600 text-lg">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">Tokens</h1>
+              <p className="text-gray-300 text-lg">
                 All tracked tokens. Tokens with signals appear on the dashboard.
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 Note: Native tokens (ETH, BNB, MATIC) use the zero address and cannot be tracked via ERC20 transfers.
               </p>
             </div>
 
             {/* Filters */}
-            <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
+            <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Chain
                   </label>
                   <select
                     value={filter.chain}
                     onChange={(e) => setFilter({ ...filter, chain: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    className="w-full px-4 py-2 bg-black/40 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                   >
                     <option value="">All Chains</option>
                     <option value="ethereum">Ethereum</option>
@@ -93,13 +93,13 @@ export default function TokensPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Status
                   </label>
                   <select
                     value={filter.active}
                     onChange={(e) => setFilter({ ...filter, active: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    className="w-full px-4 py-2 bg-black/40 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                   >
                     <option value="">All</option>
                     <option value="true">Active</option>
@@ -110,92 +110,92 @@ export default function TokensPage() {
             </div>
 
             {error && (
-              <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 shadow-soft">
+              <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4">
                 {error}
               </div>
             )}
 
             {isLoading ? (
-              <div className="glass shadow-soft rounded-xl p-8">
+              <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-8">
                 <div className="animate-pulse space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+                    <div key={i} className="h-20 bg-purple-500/10 rounded-lg"></div>
                   ))}
                 </div>
               </div>
             ) : tokens.length === 0 ? (
-              <div className="glass shadow-soft rounded-xl p-8 text-center">
-                <p className="text-gray-500 text-lg">No tokens found.</p>
+              <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-8 text-center">
+                <p className="text-gray-400 text-lg">No tokens found.</p>
               </div>
             ) : (
-              <div className="glass shadow-soft rounded-xl overflow-hidden card-hover">
+              <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
+                  <table className="min-w-full divide-y divide-purple-500/20">
+                    <thead className="bg-purple-500/10">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Token
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Chain
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Contract Address
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Signals
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Latest Signal
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-purple-500/20">
                       {tokens.map((token) => (
-                        <tr key={token.id} className="transition-colors">
+                        <tr key={token.id} className="transition-colors hover:bg-purple-500/5">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-white">
                               {token.symbol}
                             </div>
-                            <div className="text-sm text-gray-500">{token.name}</div>
+                            <div className="text-sm text-gray-400">{token.name}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                             {token.chain}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {token.contractAddress === '0x0000000000000000000000000000000000000000' ? (
                               <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 italic">Native Token</span>
+                                <span className="text-sm text-gray-400 italic">Native Token</span>
                                 <span
-                                  className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                                  className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded border border-blue-500/30"
                                   title="Native tokens (ETH, BNB, MATIC) use the zero address. They cannot be tracked via ERC20 transfers."
                                 >
                                   ℹ️
                                 </span>
                               </div>
                             ) : (
-                              <div className="text-sm text-gray-900 font-mono">
+                              <div className="text-sm text-white font-mono">
                                 {token.contractAddress.slice(0, 10)}...
                                 {token.contractAddress.slice(-8)}
                               </div>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                             {token.signalCount !== undefined ? (
                               <div className="flex items-center">
-                                <span className="font-medium text-gray-900">{token.signalCount}</span>
+                                <span className="font-medium text-white">{token.signalCount}</span>
                                 {token.signalCount > 0 && (
-                                  <span className="ml-2 text-xs text-purple-600">signals</span>
+                                  <span className="ml-2 text-xs text-purple-400">signals</span>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-gray-400">—</span>
+                              <span className="text-gray-500">—</span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -205,32 +205,32 @@ export default function TokensPage() {
                                   <span
                                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                       getScoreNumber(token.latestSignal.score) >= 75
-                                        ? 'bg-red-100 text-red-800'
+                                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                                         : getScoreNumber(token.latestSignal.score) >= 60
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-green-100 text-green-800'
+                                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                                        : 'bg-green-500/20 text-green-400 border border-green-500/30'
                                     }`}
                                   >
                                     {getScoreNumber(token.latestSignal.score).toFixed(1)}
                                   </span>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-gray-400">
                                     {new Date(token.latestSignal.createdAt).toLocaleDateString()}
                                   </span>
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-gray-400 mt-1">
                                   {token.latestSignal.signalType}
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-gray-400 text-sm">No signals yet</span>
+                              <span className="text-gray-500 text-sm">No signals yet</span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 token.active
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                               }`}
                             >
                               {token.active ? 'Active' : 'Inactive'}
@@ -238,8 +238,8 @@ export default function TokensPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <Link
-                              href={`/tokens/${token.id}`}
-                              className="text-purple-600 hover:text-purple-800 font-semibold hover:underline transition-colors"
+                              href={`/token/${token.chain.toLowerCase()}/${token.contractAddress === '0x0000000000000000000000000000000000000000' ? token.symbol.toLowerCase() : token.contractAddress}`}
+                              className="text-purple-400 hover:text-purple-300 font-semibold hover:underline transition-colors"
                             >
                               View Details
                             </Link>

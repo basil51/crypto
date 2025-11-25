@@ -42,5 +42,35 @@ export class AppController {
   ) {
     return this.appService.getRecentWhaleTransactions(limit);
   }
+
+  /**
+   * Dashboard endpoint: Smart Money Wallets Leaderboard
+   */
+  @Get('dashboard/smart-money-leaderboard')
+  async getSmartMoneyLeaderboard(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.appService.getSmartMoneyLeaderboard(limit);
+  }
+
+  /**
+   * Dashboard endpoint: New Born Tokens (created in last 30 min with whale buys)
+   */
+  @Get('dashboard/new-born-tokens')
+  async getNewBornTokens(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.appService.getNewBornTokens(limit);
+  }
+
+  /**
+   * Dashboard endpoint: Top Gainers Prediction
+   */
+  @Get('dashboard/top-gainers')
+  async getTopGainers(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.appService.getTopGainers(limit);
+  }
 }
 

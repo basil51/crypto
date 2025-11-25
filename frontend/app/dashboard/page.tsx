@@ -90,10 +90,13 @@ export default function Dashboard() {
     setError('');
     try {
       // Load all sections in parallel
-      const [topTokens, alerts, notifications] = await Promise.all([
+      const [topTokens, alerts, notifications, leaderboard, newBorn, topGainersData] = await Promise.all([
         api.getTopAccumulatingTokens(20),
         api.getAlerts(),
         api.getMyNotifications(10, true),
+        api.getSmartMoneyLeaderboard(10),
+        api.getNewBornTokens(10),
+        api.getTopGainers(10),
       ]);
 
       // Transform top tokens to hot accumulations
@@ -131,11 +134,46 @@ export default function Dashboard() {
 
       setWhaleAlerts(alertsList);
 
-      // For now, use placeholder data for smart money wallets, new born tokens, and top gainers
-      // These will be implemented with proper backend endpoints later
-      setSmartMoneyWallets([]);
-      setNewBornTokens([]);
-      setTopGainers([]);
+      // Transform smart money leaderboard
+      const wallets: SmartMoneyWallet[] = leaderboard.map((wallet: any) => ({
+        address: wallet.address,
+        name: wallet.name,
+        winRate: wallet.winRate,
+        totalPnL: wallet.totalPnL,
+        tokensTracked: wallet.tokensTracked,
+        recentActivity: wallet.recentActivity,
+      }));
+      setSmartMoneyWallets(wallets);
+
+      // Transform new born tokens
+      const newBornList: NewBornToken[] = newBorn
+        .filter((token: any) => selectedChain === 'ALL' || token.chain === selectedChain)
+        .map((token: any) => ({
+          tokenId: token.tokenId,
+          symbol: token.symbol,
+          chain: token.chain,
+          name: token.name || token.symbol,
+          contractAddress: token.contractAddress,
+          age: token.age,
+          whaleBuys: token.whaleBuys,
+          accumScore: token.accumScore,
+        }));
+      setNewBornTokens(newBornList);
+
+      // Transform top gainers
+      const gainers: TopGainer[] = topGainersData
+        .filter((token: any) => selectedChain === 'ALL' || token.chain === selectedChain)
+        .map((token: any) => ({
+          tokenId: token.tokenId,
+          symbol: token.symbol,
+          chain: token.chain,
+          name: token.name || token.symbol,
+          contractAddress: token.contractAddress,
+          accumScore: token.accumScore,
+          predictedGain: token.predictedGain,
+          confidence: token.confidence,
+        }));
+      setTopGainers(gainers);
     } catch (err: any) {
       console.error('Failed to load dashboard data:', err);
       setError(err.message || 'Failed to load dashboard data');
@@ -165,7 +203,7 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
         <Navbar />
         <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
@@ -229,7 +267,7 @@ export default function Dashboard() {
                   {hotAccumulations.map((token) => (
                     <Link
                       key={token.tokenId}
-                      href={`/token/${token.chain.toLowerCase()}/${token.contractAddress || token.symbol}`}
+                      href={`/token/${token.chain.toLowerCase()}/${token.contractAddress === '0x0000000000000000000000000000000000000000' ? token.symbol.toLowerCase() : (token.contractAddress || token.symbol.toLowerCase())}`}
                       className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition cursor-pointer"
                     >
                       <div className="flex items-center gap-4">

@@ -193,7 +193,7 @@ Based on new professional design system (see `/other` folder for reference desig
    - ✅ Auto-refresh every 30 seconds
    - ✅ Loading states and error handling
 
-**2. ⏳ Dashboard Redesign** - **IN PROGRESS**
+**2. ✅ Dashboard Redesign** - **COMPLETED**
    - ✅ Design reference created (`/other/Dashboard/page.tsx`)
    - ✅ Multi-chain view toggle (All Chains / ETH / SOL / BASE / etc.) - Connected to real data
    - ✅ Hot Accumulations section (tokens with highest smart money inflow) - Connected to real backend
@@ -201,9 +201,9 @@ Based on new professional design system (see `/other` folder for reference desig
    - ✅ Modern card-based layout with gradients - SmartFlow branding
    - ✅ Auto-refresh every 30 seconds
    - ✅ Loading states and error handling
-   - ⏳ Smart Money Wallets Leaderboard - Needs backend endpoint
-   - ⏳ New Born Tokens section (first 30 min with whale buys) - Needs backend endpoint
-   - ⏳ Top Gainers Prediction (based on accumulation score) - Needs backend endpoint
+   - ✅ Smart Money Wallets Leaderboard - Backend endpoint created and integrated
+   - ✅ New Born Tokens section (first 30 min with whale buys) - Backend endpoint created and integrated
+   - ✅ Top Gainers Prediction (based on accumulation score) - Backend endpoint created and integrated
 
 **3. ✅ Token Detail Page Redesign** - **CORE COMPLETE**
    - ✅ Design reference created (`/other/Detail/page.tsx`)
@@ -217,17 +217,18 @@ Based on new professional design system (see `/other` folder for reference desig
    - ✅ Smart Money Flow summary - Connected to real data
    - ✅ Loading states and error handling
    - ✅ Removed conflicting `/token/[symbol]` route
-   - ⏳ Price chart + Volume integration (TradingView or Recharts) - Placeholder ready
+   - ✅ Price chart + Volume integration (Recharts) - Implemented with timeframes
    - ⏳ AI Price Targets (24h, 7d, 30d with probability) - Placeholder ready
    - ⏳ Social Sentiment Score - Placeholder ready
    - ⏳ Top Holders with distribution - Needs backend endpoint
    - ⏳ Holder Distribution Bubble Map visualization - Needs backend endpoint
    - ⏳ Watchlist and alert buttons - UI ready, needs backend integration
 
-**4. ⏳ Charts and Visualizations** - **MEDIUM PRIORITY**
-   - ⏳ Price/volume charts (TradingView integration or Recharts)
+**4. ⏳ Charts and Visualizations** - **PARTIALLY COMPLETE**
+   - ✅ Price/volume charts (Recharts) - Implemented on token detail page with CoinGecko integration
+   - ✅ Time-based charts (1H, 24H, 7D, 30D, 1Y) - All timeframes working with real price data
+   - ✅ CoinGecko API integration for real-time price data
    - ⏳ Whale accumulation heatmap
-   - ⏳ Time-based charts (1H, 24H, 7D, 30D, 1Y)
    - ⏳ Orderbook heatmap visualization
    - ⏳ Accumulation timeline charts
    - ⏳ Holder distribution bubble map
@@ -241,14 +242,16 @@ Based on new professional design system (see `/other` folder for reference desig
    - ⏳ WebSocket connection management
    - ⏳ Auto-reconnect logic
 
-**6. ⏳ Alpha Screener Page** - **NEW FEATURE**
-   - ⏳ Advanced filters (Chain, Age, Volume, MCAP, Whale inflow %, Accumulation score)
-   - ⏳ "Find next 100x" presets:
+**6. ✅ Alpha Screener Page** - **COMPLETED**
+   - ✅ Advanced filters (Chain, Age, Volume, MCAP, Whale inflow %, Accumulation score)
+   - ✅ "Find next 100x" presets:
      - < $1M MC + > 5 smart wallets bought
      - Solana tokens < 10 min old with whale buy
      - ETH tokens with > 10 winning wallets accumulating
-   - ⏳ Results table with sortable columns
-   - ⏳ Quick actions (watchlist, alert, view detail)
+   - ✅ Results table with sortable columns
+   - ✅ Quick actions (watchlist, alert, view detail)
+   - ✅ Backend endpoint: `GET /tokens/alpha-screener` with all filters
+   - ✅ Frontend page at `/alpha-screener` with SmartFlow branding
 
 **7. ⏳ Whale Wallet Tracker Page** - **NEW FEATURE**
    - ⏳ Route: `/wallet/:address`
@@ -313,8 +316,8 @@ Based on new professional design system (see `/other` folder for reference desig
 ### Overall Completion:
 - **Core MVP (Roadmap.md):** ✅ 100% Complete 🎉
 - **Extended Features (Roadmap2.md):** ✅ 80% Complete
-- **UI/UX Improvements:** ⏳ 60% Complete (Homepage ✅, Dashboard ⏳ 70%, Token Detail ✅ Core Complete)
-- **Total Project:** ⏳ ~80% Complete (UI/UX improvements in progress, core pages functional)
+- **UI/UX Improvements:** ⏳ 70% Complete (Homepage ✅, Dashboard ✅ 100%, Token Detail ✅ Core Complete, Alpha Screener ✅)
+- **Total Project:** ⏳ ~85% Complete (UI/UX improvements in progress, core pages functional)
 
 ---
 
@@ -344,11 +347,11 @@ Based on new professional design system (see `/other` folder for reference desig
 
 5. ⏳ **UI/UX Improvements - NEW PRIORITY** ⏳ **IN PROGRESS**
    - ✅ Homepage redesign (SmartFlow branding) - **COMPLETED**
-   - ⏳ Dashboard redesign (multi-chain view) - **70% Complete** (needs backend endpoints for leaderboard, new born tokens, top gainers)
+   - ✅ Dashboard redesign (multi-chain view) - **100% Complete** (all backend endpoints created and integrated)
    - ✅ Token detail page redesign (`/token/:chain/:address`) - **Core Complete** (needs charts and advanced analytics)
-   - ⏳ Charts and visualizations (TradingView/Recharts) - **Next Priority**
+   - ⏳ Charts and visualizations (Recharts) - **PARTIALLY COMPLETE** (Price/Volume charts with CoinGecko done, other visualizations pending)
    - ⏳ WebSocket real-time updates - **High Priority**
-   - ⏳ Alpha Screener page (NEW)
+   - ✅ Alpha Screener page - **COMPLETED**
    - ⏳ Whale Wallet Tracker page (NEW)
    - ⏳ Smart Money Portfolios page (NEW)
 

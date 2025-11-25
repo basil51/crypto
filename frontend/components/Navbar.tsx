@@ -25,52 +25,93 @@ export default function Navbar() {
             </div>
             <span>SmartFlow</span>
           </Link>
-          {isAuthenticated && (
-            <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
-              <Link
-                href="/dashboard"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/tokens"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Screener
-              </Link>
-              <Link
-                href="/whales"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Whales
-              </Link>
-              <Link
-                href="/alerts"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Alerts
-              </Link>
-              <Link
-                href="/sell-walls"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Sell Walls
-              </Link>
-              <Link
-                href="/notifications"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Notifications
-              </Link>
-              <Link
-                href="/billing"
-                className="text-white hover:text-purple-400 transition"
-              >
-                Billing
-              </Link>
-            </div>
-          )}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/alpha-screener"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Alpha Screener
+                </Link>
+                <Link
+                  href="/tokens"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Tokens
+                </Link>
+                <Link
+                  href="/whales"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Whales
+                </Link>
+                <Link
+                  href="/alerts"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Alerts
+                </Link>
+                <Link
+                  href="/sell-walls"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Sell Walls
+                </Link>
+                <Link
+                  href="/notifications"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Notifications
+                </Link>
+                <Link
+                  href="/billing"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Billing
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/alpha-screener"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Alpha Screener
+                </Link>
+                <Link
+                  href="/tokens"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Tokens
+                </Link>
+                <Link
+                  href="/whales"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Whales
+                </Link>
+                <Link
+                  href="/billing"
+                  className="text-white hover:text-purple-400 transition"
+                >
+                  Pricing
+                </Link>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MoralisService } from './services/moralis.service';
 import { AlchemyService } from './services/alchemy.service';
+import { CoinGeckoService } from './services/coingecko.service';
 
 @Injectable()
 export class IntegrationsService {
@@ -11,6 +12,7 @@ export class IntegrationsService {
     private configService: ConfigService,
     public readonly moralis: MoralisService,
     public readonly alchemy: AlchemyService,
+    public readonly coingecko: CoinGeckoService,
   ) {}
 
   async logApiUsage(provider: string, endpoint: string, costEstimate?: number) {

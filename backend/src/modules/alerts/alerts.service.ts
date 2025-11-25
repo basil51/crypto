@@ -139,6 +139,7 @@ export class AlertsService {
     // Enrich alerts with formatted data
     return alerts.map((alert) => {
       const token = alert.token || alert.signal?.token;
+      const signal = alert.signal;
       return {
         id: alert.id,
         alertType: alert.alertType,
@@ -150,9 +151,20 @@ export class AlertsService {
           id: token.id,
           symbol: token.symbol,
           name: token.name,
+          chain: token.chain,
         } : null,
         metadata: alert.metadata,
         message: this.formatAlertMessage(alert),
+        // Include signal information if available
+        signal: signal ? {
+          id: signal.id,
+          score: signal.score,
+          signalType: signal.signalType,
+          windowStart: signal.windowStart,
+          windowEnd: signal.windowEnd,
+          walletsInvolved: signal.walletsInvolved,
+          metadata: signal.metadata,
+        } : null,
       };
     });
   }

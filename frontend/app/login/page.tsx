@@ -23,8 +23,8 @@ export default function LoginPage() {
   // Show loading state while checking authentication
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400"></div>
       </div>
     );
   }
@@ -70,56 +70,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-4xl font-extrabold gradient-text">
+          <h2 className="mt-6 text-center text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-300">
             Or{' '}
-            <Link href="/register" className="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+            <Link href="/register" className="font-medium text-purple-400 hover:text-purple-300 transition-colors">
               create a new account
             </Link>
           </p>
         </div>
 
         {/* Test Users Section */}
-        <div className="glass shadow-soft border border-purple-200 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-purple-900 mb-3">🧪 Test Accounts</h3>
+        <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-4">
+          <h3 className="text-sm font-semibold text-purple-400 mb-3">🧪 Test Accounts</h3>
           <div className="space-y-2">
             {testUsers.map((user) => (
               <div
                 key={user.email}
-                className="bg-white rounded border border-blue-200 p-3"
+                className="bg-black/40 border border-purple-500/30 rounded-lg p-3"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 mb-1">{user.email}</div>
-                    <div className="text-xs text-gray-600">
-                      <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-800 rounded mr-1">{user.role}</span>
-                      <span className="inline-block px-2 py-0.5 bg-green-100 text-green-800 rounded">{user.plan}</span>
+                    <div className="text-sm font-medium text-white mb-1">{user.email}</div>
+                    <div className="text-xs text-gray-400">
+                      <span className="inline-block px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded mr-1 border border-purple-500/30">{user.role}</span>
+                      <span className="inline-block px-2 py-0.5 bg-green-500/20 text-green-400 rounded border border-green-500/30">{user.plan}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => fillCredentials(user.email, user.password)}
-                    className="ml-2 px-3 py-1 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="ml-2 px-3 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     title="Click to fill form"
                   >
                     Fill
                   </button>
                 </div>
-                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200">
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-purple-500/20">
                   <div className="flex-1">
-                    <div className="text-xs text-gray-500 mb-1">Email:</div>
+                    <div className="text-xs text-gray-400 mb-1">Email:</div>
                     <div className="flex items-center gap-1">
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 font-mono">{user.email}</code>
+                      <code className="text-xs bg-black/40 border border-purple-500/30 px-2 py-1 rounded flex-1 font-mono text-white">{user.email}</code>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           copyToClipboard(user.email, 'email');
                         }}
-                        className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                        className="px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-purple-500/20 rounded"
                         title="Copy email"
                       >
                         📋
@@ -127,15 +127,15 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs text-gray-500 mb-1">Password:</div>
+                    <div className="text-xs text-gray-400 mb-1">Password:</div>
                     <div className="flex items-center gap-1">
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 font-mono">{user.password}</code>
+                      <code className="text-xs bg-black/40 border border-purple-500/30 px-2 py-1 rounded flex-1 font-mono text-white">{user.password}</code>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           copyToClipboard(user.password, 'password');
                         }}
-                        className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                        className="px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-purple-500/20 rounded"
                         title="Copy password"
                       >
                         📋
@@ -146,15 +146,15 @@ export default function LoginPage() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-purple-700 mt-3">💡 Click "Fill" to auto-fill or use 📋 to copy credentials</p>
+          <p className="text-xs text-purple-400 mt-3">💡 Click "Fill" to auto-fill or use 📋 to copy credentials</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-soft">
+            <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
-          <div className="rounded-xl shadow-soft -space-y-px">
+          <div className="rounded-xl -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-t-xl relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-all"
+                className="appearance-none rounded-t-xl relative block w-full px-4 py-3 border border-purple-500/30 placeholder-gray-500 bg-black/40 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-all"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-b-xl relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-all"
+                className="appearance-none rounded-b-xl relative block w-full px-4 py-3 border border-purple-500/30 placeholder-gray-500 bg-black/40 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm transition-all"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -193,7 +193,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

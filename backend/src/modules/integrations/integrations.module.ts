@@ -8,6 +8,7 @@ import { EtherscanService } from './services/etherscan.service';
 import { TheGraphService } from './services/thegraph.service';
 import { DexAnalyticsService } from './services/dex-analytics.service';
 import { ApiCostService } from './services/api-cost.service';
+import { CoinGeckoService } from './services/coingecko.service';
 
 @Module({
   controllers: [IntegrationsController],
@@ -20,6 +21,7 @@ import { ApiCostService } from './services/api-cost.service';
     TheGraphService,
     DexAnalyticsService,
     ApiCostService,
+    CoinGeckoService,
   ],
   exports: [
     IntegrationsService,
@@ -30,6 +32,7 @@ import { ApiCostService } from './services/api-cost.service';
     TheGraphService,
     DexAnalyticsService,
     ApiCostService,
+    CoinGeckoService,
   ],
 })
 export class IntegrationsModule {}

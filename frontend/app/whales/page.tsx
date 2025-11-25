@@ -92,28 +92,28 @@ export default function WhalesPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
         <Navbar />
         <main className="max-w-7xl mx-auto pt-24 pb-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold gradient-text mb-2">Whale Activity</h1>
-              <p className="text-gray-600 text-lg">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">Whale Activity</h1>
+              <p className="text-gray-300 text-lg">
                 Track whale movements and large transactions
               </p>
             </div>
 
             {/* Filters */}
-            <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
+            <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Select Token
                   </label>
                   <select
                     value={selectedTokenId}
                     onChange={(e) => setSelectedTokenId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    className="w-full px-4 py-2 bg-black/40 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                   >
                     <option value="">Select a token...</option>
                     {tokens.map((token) => (
@@ -124,13 +124,13 @@ export default function WhalesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Time Range
                   </label>
                   <select
                     value={hours}
                     onChange={(e) => setHours(Number(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    className="w-full px-4 py-2 bg-black/40 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                   >
                     <option value={1}>Last 1 hour</option>
                     <option value={6}>Last 6 hours</option>
@@ -146,15 +146,15 @@ export default function WhalesPage() {
             )}
 
             {isPro && error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4">
                 {error}
               </div>
             )}
 
             {isPro && loading && (
-              <div className="glass shadow-soft rounded-xl p-8">
+              <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-8">
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
                 </div>
               </div>
             )}
@@ -162,17 +162,17 @@ export default function WhalesPage() {
             {isPro && whaleActivity && !loading && (
               <>
                 {/* Whale Score Card */}
-                <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
-              <h2 className="text-xl font-semibold mb-4">Whale Score</h2>
+                <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-white">Whale Score</h2>
               <div className="flex items-center">
-                <div className="text-4xl font-bold text-blue-600">
+                <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   {whaleActivity.whaleScore}
                 </div>
                 <div className="ml-4">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-300">
                     {whaleActivity.summary.eventCount} events
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-300">
                     {whaleActivity.summary.uniqueWallets} unique wallets
                   </div>
                 </div>
@@ -180,33 +180,33 @@ export default function WhalesPage() {
             </div>
 
                 {/* Top Buyers */}
-                <div className="glass shadow-soft rounded-xl p-6 mb-6 card-hover">
-              <h2 className="text-xl font-semibold mb-4">Top Buyers</h2>
+                <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-white">Top Buyers</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-purple-500/20">
+                  <thead className="bg-purple-500/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
                         Address
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
                         Total Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
                         Transactions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-purple-500/20">
                     {whaleActivity.topBuyers.map((buyer, idx) => (
-                      <tr key={idx}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                      <tr key={idx} className="hover:bg-purple-500/5">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-white">
                           {buyer.address.slice(0, 10)}...{buyer.address.slice(-8)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {buyer.totalAmount.toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {buyer.transactionCount}
                         </td>
                       </tr>
@@ -218,25 +218,25 @@ export default function WhalesPage() {
 
                 {/* Exchange Flows */}
                 {exchangeFlows && (
-                  <div className="glass shadow-soft rounded-xl p-6 card-hover">
-                <h2 className="text-xl font-semibold mb-4">Exchange Flows</h2>
+                  <div className="bg-black/40 border border-purple-500/20 rounded-2xl backdrop-blur-xl p-6">
+                <h2 className="text-xl font-semibold mb-4 text-white">Exchange Flows</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-green-50 p-4 rounded">
-                    <div className="text-sm text-gray-600">Inflow</div>
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg">
+                    <div className="text-sm text-gray-300">Inflow</div>
+                    <div className="text-2xl font-bold text-green-400">
                       {exchangeFlows.summary.inflow.toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-red-50 p-4 rounded">
-                    <div className="text-sm text-gray-600">Outflow</div>
-                    <div className="text-2xl font-bold text-red-600">
+                  <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-lg">
+                    <div className="text-sm text-gray-300">Outflow</div>
+                    <div className="text-2xl font-bold text-red-400">
                       {exchangeFlows.summary.outflow.toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-blue-50 p-4 rounded">
-                    <div className="text-sm text-gray-600">Net Flow</div>
+                  <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                    <div className="text-sm text-gray-300">Net Flow</div>
                     <div className={`text-2xl font-bold ${
-                      exchangeFlows.summary.netFlow >= 0 ? 'text-green-600' : 'text-red-600'
+                      exchangeFlows.summary.netFlow >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
                       {exchangeFlows.summary.netFlow.toLocaleString()}
                     </div>

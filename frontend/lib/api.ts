@@ -105,6 +105,14 @@ class ApiClient {
     return this.request<any>(`/tokens/by-address?chain=${chain}&address=${address}`);
   }
 
+  async getTokenBySymbol(chain: string, symbol: string) {
+    return this.request<any>(`/tokens/by-symbol?chain=${chain}&symbol=${symbol}`);
+  }
+
+  async getTokenPriceHistory(tokenId: string, timeframe: string = '24h') {
+    return this.request<any[]>(`/tokens/${tokenId}/price-history?timeframe=${timeframe}`);
+  }
+
   // Alerts endpoints
   async getAlerts() {
     return this.request<any[]>('/alerts');
@@ -261,6 +269,56 @@ class ApiClient {
     return this.request<any[]>(`/public/whale-transactions?limit=${limit}`, {
       headers: { skipAuth: 'true' },
     });
+  }
+
+  // Dashboard endpoints
+  async getSmartMoneyLeaderboard(limit: number = 10) {
+    return this.request<any[]>(`/dashboard/smart-money-leaderboard?limit=${limit}`);
+  }
+
+  async getNewBornTokens(limit: number = 10) {
+    return this.request<any[]>(`/dashboard/new-born-tokens?limit=${limit}`);
+  }
+
+  async getTopGainers(limit: number = 10) {
+    return this.request<any[]>(`/dashboard/top-gainers?limit=${limit}`);
+  }
+
+  // Alpha Screener endpoints
+  async alphaScreener(filters: {
+    chain?: string;
+    minAge?: number;
+    maxAge?: number;
+    minVolume24h?: number;
+    maxVolume24h?: number;
+    minMarketCap?: number;
+    maxMarketCap?: number;
+    minWhaleInflowPercent?: number;
+    minAccumulationScore?: number;
+    minSmartWallets?: number;
+    preset?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    limit?: number;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (filters.chain) queryParams.append('chain', filters.chain);
+    if (filters.minAge !== undefined) queryParams.append('minAge', filters.minAge.toString());
+    if (filters.maxAge !== undefined) queryParams.append('maxAge', filters.maxAge.toString());
+    if (filters.minVolume24h !== undefined) queryParams.append('minVolume24h', filters.minVolume24h.toString());
+    if (filters.maxVolume24h !== undefined) queryParams.append('maxVolume24h', filters.maxVolume24h.toString());
+    if (filters.minMarketCap !== undefined) queryParams.append('minMarketCap', filters.minMarketCap.toString());
+    if (filters.maxMarketCap !== undefined) queryParams.append('maxMarketCap', filters.maxMarketCap.toString());
+    if (filters.minWhaleInflowPercent !== undefined) queryParams.append('minWhaleInflowPercent', filters.minWhaleInflowPercent.toString());
+    if (filters.minAccumulationScore !== undefined) queryParams.append('minAccumulationScore', filters.minAccumulationScore.toString());
+    if (filters.minSmartWallets !== undefined) queryParams.append('minSmartWallets', filters.minSmartWallets.toString());
+    if (filters.preset) queryParams.append('preset', filters.preset);
+    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+    if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+    if (filters.limit) queryParams.append('limit', filters.limit.toString());
+
+    const query = queryParams.toString();
+    return this.request<any[]>(`/tokens/alpha-screener${query ? `?${query}` : ''}`);
   }
 }
 
