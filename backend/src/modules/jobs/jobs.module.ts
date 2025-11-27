@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JobsService } from './jobs.service';
+import { JobsController } from './jobs.controller';
 import { ScheduleModule } from '@nestjs/schedule';
 import { IngestionService } from './services/ingestion.service';
 import { PositionsService } from './services/positions.service';
@@ -25,6 +26,7 @@ import { OrderbookModule } from '../orderbook/orderbook.module';
     AlertsModule,
     OrderbookModule,
   ],
+  controllers: [JobsController],
   providers: [
     JobsService,
     IngestionService,

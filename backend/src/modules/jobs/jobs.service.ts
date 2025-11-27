@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { IngestionService } from './services/ingestion.service';
 import { PositionsService } from './services/positions.service';
 import { DetectionService } from './services/detection.service';
 import { TokenDiscoveryService } from './services/token-discovery.service';
+import { BroadMonitoringService } from '../alerts/services/broad-monitoring.service';
 
 @Injectable()
 export class JobsService {
@@ -11,12 +12,14 @@ export class JobsService {
   private isIngesting = false;
   private isUpdatingPositions = false;
   private isRunningDetection = false;
+  private isBroadMonitoring = false;
 
   constructor(
     private ingestionService: IngestionService,
     private positionsService: PositionsService,
     private detectionService: DetectionService,
     private tokenDiscoveryService: TokenDiscoveryService,
+    @Optional() private broadMonitoringService?: BroadMonitoringService,
   ) {}
 
   /**
@@ -118,6 +121,38 @@ export class JobsService {
       this.logger.error(`Detection worker job failed: ${error.message}`, error.stack);
     } finally {
       this.isRunningDetection = false;
+    }
+  }
+
+  /**
+   * Monitor all tokens for whale activity (broad monitoring)
+   * Runs every 30 minutes to catch whale movements on ANY token
+   * This creates alerts for PRO users without requiring specific token subscriptions
+   */
+  @Cron('*/30 * * * *') // Every 30 minutes
+  async runBroadMonitoring() {
+    if (this.isBroadMonitoring) {
+      this.logger.warn('Broad monitoring already in progress, skipping...');
+      return;
+    }
+
+    if (!this.broadMonitoringService) {
+      this.logger.debug('BroadMonitoringService not available, skipping broad monitoring');
+      return;
+    }
+
+    this.isBroadMonitoring = true;
+    try {
+      this.logger.log('🔍 Starting broad monitoring job...');
+      const result = await this.broadMonitoringService.monitorAllTokens();
+      this.logger.log(
+        `✅ Broad monitoring completed: ${result.processed} transfers processed, ` +
+        `${result.alertsCreated} alerts created, ${result.newTokensDiscovered} new tokens discovered`
+      );
+    } catch (error) {
+      this.logger.error(`Broad monitoring job failed: ${error.message}`, error.stack);
+    } finally {
+      this.isBroadMonitoring = false;
     }
   }
 }

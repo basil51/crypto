@@ -184,6 +184,79 @@ export class BitqueryService {
   }
 
   /**
+   * Get all large transfers across ALL tokens (broad monitoring)
+   * This method doesn't filter by token address, catching whale activity on any token
+   */
+  async getAllLargeTransfers(
+    network: string = 'ethereum',
+    minAmountUSD: number = 100000, // $100k USD minimum
+    limit: number = 100,
+    fromTime?: string,
+  ): Promise<LargeTransfer[]> {
+    const query = `
+      query GetAllLargeTransfers(
+        $network: String!
+        $minAmountUSD: Float!
+        $limit: Int!
+        $fromTime: ISO8601DateTime
+      ) {
+        ethereum(network: $network) {
+          transfers(
+            amount: { gte: $minAmountUSD }
+            date: { since: $fromTime }
+            options: { limit: $limit, desc: "block.timestamp.time" }
+          ) {
+            transaction {
+              hash
+              block {
+                timestamp {
+                  time
+                }
+                number
+              }
+            }
+            amount
+            currency {
+              address
+              symbol
+              name
+            }
+            receiver {
+              address
+            }
+            sender {
+              address
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      network,
+      minAmountUSD,
+      limit,
+      fromTime: fromTime || new Date(Date.now() - 60 * 60 * 1000).toISOString(), // Last 1 hour
+    };
+
+    try {
+      const data = await this.query<{ ethereum: { transfers: LargeTransfer[] } }>(
+        query,
+        variables,
+      );
+      
+      this.logger.log(
+        `Fetched ${data.ethereum?.transfers?.length || 0} large transfers across all tokens from ${network}`
+      );
+      
+      return data.ethereum?.transfers || [];
+    } catch (error) {
+      this.logger.error(`Failed to fetch all large transfers: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
    * Analyze wallet flow for a token (inflow/outflow analysis)
    */
   async getWalletFlow(
