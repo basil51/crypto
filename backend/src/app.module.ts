@@ -25,6 +25,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
 import { MonitoringModule } from './common/monitoring/monitoring.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { DashboardsModule } from './modules/dashboards/dashboards.module';
+import { WebSocketModule } from './modules/websocket/websocket.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { MonitoringInterceptor } from './common/monitoring/monitoring.interceptor';
 
@@ -65,6 +66,7 @@ import { MonitoringInterceptor } from './common/monitoring/monitoring.intercepto
     MonitoringModule,
     PaymentsModule,
     DashboardsModule,
+    WebSocketModule,
   ],
   controllers: [AppController],
   providers: [

@@ -429,6 +429,23 @@ export default function NotificationsPage() {
                             
                             {/* Stats Row */}
                             <div className="flex flex-wrap gap-4 text-sm mt-3">
+                              {/* Number of Coins */}
+                              {notification.signal && (
+                                (() => {
+                                  const numCoins = notification.signal.metadata?.numCoins 
+                                    || notification.signal.metadata?.coinCount 
+                                    || notification.signal.metadata?.tokensCount 
+                                    || notification.signal.metadata?.numberOfCoins;
+                                  return numCoins ? (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-400">Coins:</span>
+                                      <span className="font-semibold text-cyan-400">
+                                        {formatNumber(numCoins)}
+                                      </span>
+                                    </div>
+                                  ) : null;
+                                })()
+                              )}
                               {notification.signal?.metadata?.totalVolume && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-gray-400">Volume:</span>

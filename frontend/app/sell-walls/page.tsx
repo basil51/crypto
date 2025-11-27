@@ -149,18 +149,43 @@ export default function SellWallsPage() {
                         {wall.exchange}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {wall.tokenName ? (
-                          <div>
-                            <div className="font-semibold text-white">
-                              {wall.tokenName}
-                            </div>
-                            <div className="text-xs text-gray-400 font-mono">
-                              {wall.tokenSymbol || wall.symbol}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="font-mono text-white">{wall.symbol}</span>
-                        )}
+                        {(() => {
+                          // Check if symbol is a UUID (should not be displayed)
+                          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                          const isUuid = uuidRegex.test(wall.symbol);
+                          
+                          // Prefer tokenName/tokenSymbol over raw symbol
+                          const displayName = wall.tokenName || wall.tokenSymbol || (!isUuid ? wall.symbol : null);
+                          const displaySymbol = wall.tokenSymbol || (!isUuid ? wall.symbol : null);
+                          
+                          if (displayName && displaySymbol && displayName !== displaySymbol) {
+                            // Show both name and symbol
+                            return (
+                              <div>
+                                <div className="font-semibold text-white">
+                                  {displayName}
+                                </div>
+                                <div className="text-xs text-gray-400 font-mono">
+                                  {displaySymbol}
+                                </div>
+                              </div>
+                            );
+                          } else if (displayName || displaySymbol) {
+                            // Show just the name or symbol
+                            return (
+                              <span className="font-semibold text-white">
+                                {displayName || displaySymbol}
+                              </span>
+                            );
+                          } else {
+                            // Fallback: show exchange symbol if it's not a UUID
+                            return (
+                              <span className="font-mono text-gray-400">
+                                {!isUuid ? wall.symbol : 'Unknown Token'}
+                              </span>
+                            );
+                          }
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         ${wall.price.toLocaleString()}

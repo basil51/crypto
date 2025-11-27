@@ -34,7 +34,7 @@ export default function TokensPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState({ chain: '', active: 'true' });
+  const [filter, setFilter] = useState({ chain: '', active: '' });
 
   useEffect(() => {
     loadTokens();

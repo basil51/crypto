@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Bell } from 'lucide-react';
 import { api } from '@/lib/api';
+import { wsClient } from '@/lib/websocket';
 import Link from 'next/link';
 
 interface Notification {
@@ -26,14 +28,43 @@ export default function NotificationBell() {
 
   useEffect(() => {
     loadUnreadCount();
-    
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(() => {
-      loadUnreadCount();
-    }, 30000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // Set up WebSocket for real-time notifications
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (token) {
+      wsClient.connect(token);
+
+      // Handle new notifications
+      const handleNotification = (notification: any) => {
+        // Update unread count
+        setUnreadCount((prev) => prev + 1);
+
+        // If dropdown is open, add to notifications list
+        if (isOpen) {
+          setNotifications((prev) => [notification, ...prev].slice(0, 10));
+        }
+      };
+
+      wsClient.on('notification', handleNotification);
+
+      // Fallback: poll every 60 seconds as backup
+      const interval = setInterval(() => {
+        loadUnreadCount();
+      }, 60000);
+
+      return () => {
+        wsClient.off('notification', handleNotification);
+        clearInterval(interval);
+      };
+    } else {
+      // Fallback to polling if no token
+      const interval = setInterval(() => {
+        loadUnreadCount();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     // Close dropdown when clicking outside

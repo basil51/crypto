@@ -1,6 +1,6 @@
 # Remaining Tasks Summary - SmartFlow
 
-> **Last Updated:** 2025-11-23  
+> **Last Updated:** 2025-11-25 (Token Discovery added)  
 > **Purpose:** Track all unfinished tasks from Roadmap.md and Roadmap2.md before adding new blockchain support
 > **Project Name:** SmartFlow (formerly Crypto Signals)
 > **Brand Identity:** Purple-to-pink gradient theme with modern, professional trader-focused UI
@@ -234,13 +234,13 @@ Based on new professional design system (see `/other` folder for reference desig
    - ⏳ Holder distribution bubble map
    - ⏳ Smart money flow charts
 
-**5. ⏳ WebSocket Real-Time Data Sync** - **HIGH PRIORITY**
-   - ⏳ Real-time data updates for dashboard
-   - ⏳ Live orderbook updates
-   - ⏳ Real-time signal notifications
-   - ⏳ Live whale transaction feed
-   - ⏳ WebSocket connection management
-   - ⏳ Auto-reconnect logic
+**5. ✅ WebSocket Real-Time Data Sync** - **COMPLETED**
+   - ✅ Real-time data updates for dashboard
+   - ✅ Live orderbook updates
+   - ✅ Real-time signal notifications
+   - ✅ Live whale transaction feed
+   - ✅ WebSocket connection management
+   - ✅ Auto-reconnect logic
 
 **6. ✅ Alpha Screener Page** - **COMPLETED**
    - ✅ Advanced filters (Chain, Age, Volume, MCAP, Whale inflow %, Accumulation score)
@@ -253,16 +253,33 @@ Based on new professional design system (see `/other` folder for reference desig
    - ✅ Backend endpoint: `GET /tokens/alpha-screener` with all filters
    - ✅ Frontend page at `/alpha-screener` with SmartFlow branding
 
-**7. ⏳ Whale Wallet Tracker Page** - **NEW FEATURE**
-   - ⏳ Route: `/wallet/:address`
-   - ⏳ Wallet performance history (PnL %)
-   - ⏳ Current holdings
-   - ⏳ Recent transactions
-   - ⏳ Win rate % (how many tokens they 5x+)
+**7. ✅ Whale Wallet Tracker Page** - **COMPLETED**
+   - ✅ Route: `/wallet/:address`
+   - ✅ Wallet performance history (PnL %)
+   - ✅ Current holdings
+   - ✅ Recent transactions
+   - ✅ Win rate % (how many tokens they 5x+)
    - ⏳ Copy-trade button (future feature)
-   - ⏳ Wallet score/rating
+   - ✅ Wallet score/rating (0-100)
 
-**8. ⏳ Smart Money Portfolios Page** - **NEW FEATURE**
+**8. ✅ Automatic Token Discovery** - **COMPLETED**
+   - ✅ TokenDiscoveryService with multiple discovery methods
+   - ✅ DEX token discovery (Uniswap V2/V3, PancakeSwap via The Graph)
+   - ✅ CoinGecko trending/new tokens discovery
+   - ✅ Configurable discovery criteria (min liquidity, volume, market cap, max age)
+   - ✅ Scheduled job runs every 15 minutes automatically
+   - ✅ Manual trigger endpoint: `POST /api/admin/discover-tokens` (JWT protected)
+   - ✅ Deduplication logic to avoid adding duplicate tokens
+   - ✅ Integration with Moralis/Alchemy for token metadata
+   - ✅ Environment variables for configuration:
+     - `TOKEN_DISCOVERY_ENABLED` (default: true)
+     - `TOKEN_DISCOVERY_MIN_LIQUIDITY_USD` (default: 10000)
+     - `TOKEN_DISCOVERY_MIN_VOLUME_24H_USD` (default: 50000)
+     - `TOKEN_DISCOVERY_MIN_MARKET_CAP_USD` (default: 100000)
+     - `TOKEN_DISCOVERY_MAX_AGE_HOURS` (default: 168 = 7 days)
+   - ⏳ Whale transaction-based discovery (requires Bitquery enhancement)
+
+**9. ⏳ Smart Money Portfolios Page** - **NEW FEATURE**
    - ⏳ Pre-built lists:
      - Top 50 Winning Wallets (all chains)
      - Wintermute, GSR, Cumberland (institutions)
@@ -270,13 +287,13 @@ Based on new professional design system (see `/other` folder for reference desig
    - ⏳ Custom "Follow" feature
    - ⏳ Portfolio performance tracking
 
-**9. ⏳ Token Search Improvements**
+**10. ⏳ Token Search Improvements**
    - ⏳ Advanced search filters
    - ⏳ Search autocomplete
    - ⏳ Search history
    - ⏳ Multi-chain search
 
-**10. ⏳ Skeleton Loaders & Loading States**
+**11. ⏳ Skeleton Loaders & Loading States**
    - ⏳ Skeleton loaders for real-time pages
    - ⏳ Loading states for charts
    - ⏳ Progressive data loading
@@ -315,9 +332,9 @@ Based on new professional design system (see `/other` folder for reference desig
 
 ### Overall Completion:
 - **Core MVP (Roadmap.md):** ✅ 100% Complete 🎉
-- **Extended Features (Roadmap2.md):** ✅ 80% Complete
-- **UI/UX Improvements:** ⏳ 70% Complete (Homepage ✅, Dashboard ✅ 100%, Token Detail ✅ Core Complete, Alpha Screener ✅)
-- **Total Project:** ⏳ ~85% Complete (UI/UX improvements in progress, core pages functional)
+- **Extended Features (Roadmap2.md):** ✅ 85% Complete
+- **UI/UX Improvements:** ⏳ 75% Complete (Homepage ✅, Dashboard ✅ 100%, Token Detail ✅ Core Complete, Alpha Screener ✅, Whale Wallet Tracker ✅, WebSocket ✅, Token Discovery ✅)
+- **Total Project:** ⏳ ~88% Complete (UI/UX improvements in progress, core pages functional, automatic token discovery active)
 
 ---
 
@@ -350,9 +367,10 @@ Based on new professional design system (see `/other` folder for reference desig
    - ✅ Dashboard redesign (multi-chain view) - **100% Complete** (all backend endpoints created and integrated)
    - ✅ Token detail page redesign (`/token/:chain/:address`) - **Core Complete** (needs charts and advanced analytics)
    - ⏳ Charts and visualizations (Recharts) - **PARTIALLY COMPLETE** (Price/Volume charts with CoinGecko done, other visualizations pending)
-   - ⏳ WebSocket real-time updates - **High Priority**
+   - ✅ Automatic Token Discovery - **COMPLETED** (runs every 15 minutes, discovers tokens from DEXs and CoinGecko)
+   - ✅ WebSocket real-time updates - **COMPLETED**
    - ✅ Alpha Screener page - **COMPLETED**
-   - ⏳ Whale Wallet Tracker page (NEW)
+   - ✅ Whale Wallet Tracker page - **COMPLETED**
    - ⏳ Smart Money Portfolios page (NEW)
 
 ### Low Priority (Can be done later):
@@ -424,10 +442,14 @@ Based on new professional design system (see `/other` folder for reference desig
 1. ✅ Complete Sprint 5 tasks - **DONE**
 2. ✅ Finish Roadmap2.md Phase 1, 2, 3, 4 - **DONE**
 3. ⏳ **UI/UX Improvements** - **CURRENT PRIORITY**
-   - Redesign homepage with SmartFlow branding
-   - Redesign dashboard with multi-chain support
-   - Redesign token detail page with enhanced analytics
-   - Add Alpha Screener, Whale Wallet Tracker, Smart Money Portfolios
+   - ✅ Redesign homepage with SmartFlow branding - **DONE**
+   - ✅ Redesign dashboard with multi-chain support - **DONE**
+   - ✅ Redesign token detail page with enhanced analytics - **CORE DONE** (needs advanced features)
+   - ✅ Add Alpha Screener - **DONE**
+   - ✅ Add Whale Wallet Tracker - **DONE**
+   - ⏳ Add Smart Money Portfolios - **NEXT**
+   - ⏳ Complete advanced charts and visualizations
+   - ⏳ Token search improvements
 4. Then proceed with new blockchain roadmap (Solana, Base, Arbitrum)
 
 ---

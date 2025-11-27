@@ -57,6 +57,11 @@ export class AlertsController {
     return { count };
   }
 
+  @Get('my-subscriptions')
+  async getMySubscriptions(@Request() req: any) {
+    return this.alertsService.getUserSubscriptions(req.user.userId);
+  }
+
   @Patch(':id/mark-read')
   async markAsRead(@Request() req: any, @Param('id') id: string) {
     const userId = req.user.userId;
@@ -117,10 +122,5 @@ export class AlertsController {
     @Body() body: { tokenId: string },
   ) {
     return this.alertsService.unsubscribeFromToken(req.user.userId, body.tokenId);
-  }
-
-  @Get('my-subscriptions')
-  async getMySubscriptions(@Request() req: any) {
-    return this.alertsService.getUserSubscriptions(req.user.userId);
   }
 }

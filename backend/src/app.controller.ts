@@ -1,9 +1,14 @@
-import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Post, Query, ParseIntPipe, DefaultValuePipe, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { TokenDiscoveryService } from './modules/jobs/services/token-discovery.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly tokenDiscoveryService: TokenDiscoveryService,
+  ) {}
 
   @Get()
   getHello(): string {
@@ -66,5 +71,19 @@ export class AppController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
     return this.appService.getTopGainers(limit);
+  }
+
+  /**
+   * Admin endpoint: Manually trigger token discovery
+   */
+  @Post('admin/discover-tokens')
+  @UseGuards(JwtAuthGuard)
+  async discoverTokens() {
+    const result = await this.tokenDiscoveryService.runDiscovery();
+    return {
+      message: 'Token discovery completed',
+      discovered: result.discovered,
+      added: result.added,
+    };
   }
 }

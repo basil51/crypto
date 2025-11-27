@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from '../../common/cache/cache.service';
 import { IntegrationsService } from '../integrations/integrations.service';
@@ -6,6 +6,8 @@ import { Token, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TokensService {
+  private readonly logger = new Logger(TokensService.name);
+
   constructor(
     private prisma: PrismaService,
     private cacheService: CacheService,
@@ -79,6 +81,11 @@ export class TokensService {
     const normalizedAddress = contractAddress.toLowerCase();
     const cacheKey = `tokens:${normalizedChain}:${normalizedAddress}`;
     
+    // Debug: Log the token being checked
+    this.logger.debug(
+      `findByAddress: Checking token - Chain=${normalizedChain}, Address=${normalizedAddress}`
+    );
+    
     return this.cacheService.getOrSet(
       cacheKey,
       async () => {
@@ -92,13 +99,26 @@ export class TokensService {
         `;
         
         if (result.length === 0) {
+          this.logger.debug(
+            `findByAddress: Token NOT found - Chain=${normalizedChain}, Address=${normalizedAddress}`
+          );
           return null;
         }
         
         // Fetch the full token record
-        return this.prisma.token.findUnique({
+        const token = await this.prisma.token.findUnique({
           where: { id: result[0].id },
         });
+        
+        // Debug: Log the token that was found
+        if (token) {
+          this.logger.debug(
+            `findByAddress: Token FOUND - Name="${token.name}" (${token.symbol}), ` +
+            `Chain=${normalizedChain}, Address=${normalizedAddress}`
+          );
+        }
+        
+        return token;
       },
       600, // 10 minutes
     );

@@ -52,8 +52,7 @@ export class SellWallsService {
             let tokenName = (wall.metadata as any)?.tokenName;
             let tokenId = (wall.metadata as any)?.tokenId;
 
-            // If metadata doesn't have token info, try to get it from symbol field (old format)
-            // Check if symbol is a UUID (old format)
+            // Check if symbol is a UUID (old format where tokenId was stored in symbol field)
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (!tokenId && uuidRegex.test(wall.symbol)) {
               tokenId = wall.symbol;
@@ -72,6 +71,42 @@ export class SellWallsService {
                 }
               } catch (error) {
                 // Token not found, continue without token info
+              }
+            }
+
+            // If we still don't have token info, try to find token by symbol
+            // (in case symbol is a token symbol like "BTC" or "ETH")
+            if (!tokenSymbol && !tokenName && !uuidRegex.test(wall.symbol)) {
+              try {
+                // Try to extract token symbol from exchange symbol (e.g., "BTCUSDT" -> "BTC")
+                // This is a simple heuristic - might need improvement
+                const possibleSymbols = [
+                  wall.symbol.replace('USDT', '').replace('USDC', '').replace('BUSD', ''),
+                  wall.symbol.slice(0, -4), // Remove last 4 chars (USDT)
+                  wall.symbol.slice(0, -3), // Remove last 3 chars (USD)
+                ];
+
+                for (const possibleSymbol of possibleSymbols) {
+                  if (possibleSymbol && possibleSymbol.length >= 2) {
+                    const token = await this.prisma.token.findFirst({
+                      where: {
+                        symbol: {
+                          equals: possibleSymbol,
+                          mode: 'insensitive',
+                        },
+                      },
+                      select: { symbol: true, name: true, id: true },
+                    });
+                    if (token) {
+                      tokenSymbol = token.symbol;
+                      tokenName = token.name;
+                      tokenId = token.id;
+                      break;
+                    }
+                  }
+                }
+              } catch (error) {
+                // Token lookup failed, continue without token info
               }
             }
 
@@ -118,8 +153,7 @@ export class SellWallsService {
             let tokenName = (wall.metadata as any)?.tokenName;
             let tokenId = (wall.metadata as any)?.tokenId;
 
-            // If metadata doesn't have token info, try to get it from symbol field (old format)
-            // Check if symbol is a UUID (old format)
+            // Check if symbol is a UUID (old format where tokenId was stored in symbol field)
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (!tokenId && uuidRegex.test(wall.symbol)) {
               tokenId = wall.symbol;
@@ -138,6 +172,42 @@ export class SellWallsService {
                 }
               } catch (error) {
                 // Token not found, continue without token info
+              }
+            }
+
+            // If we still don't have token info, try to find token by symbol
+            // (in case symbol is a token symbol like "BTC" or "ETH")
+            if (!tokenSymbol && !tokenName && !uuidRegex.test(wall.symbol)) {
+              try {
+                // Try to extract token symbol from exchange symbol (e.g., "BTCUSDT" -> "BTC")
+                // This is a simple heuristic - might need improvement
+                const possibleSymbols = [
+                  wall.symbol.replace('USDT', '').replace('USDC', '').replace('BUSD', ''),
+                  wall.symbol.slice(0, -4), // Remove last 4 chars (USDT)
+                  wall.symbol.slice(0, -3), // Remove last 3 chars (USD)
+                ];
+
+                for (const possibleSymbol of possibleSymbols) {
+                  if (possibleSymbol && possibleSymbol.length >= 2) {
+                    const token = await this.prisma.token.findFirst({
+                      where: {
+                        symbol: {
+                          equals: possibleSymbol,
+                          mode: 'insensitive',
+                        },
+                      },
+                      select: { symbol: true, name: true, id: true },
+                    });
+                    if (token) {
+                      tokenSymbol = token.symbol;
+                      tokenName = token.name;
+                      tokenId = token.id;
+                      break;
+                    }
+                  }
+                }
+              } catch (error) {
+                // Token lookup failed, continue without token info
               }
             }
 

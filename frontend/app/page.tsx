@@ -5,6 +5,7 @@ import { TrendingUp, Zap, ArrowRight, BarChart3, Wallet, Search } from 'lucide-r
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
+import { wsClient } from '@/lib/websocket';
 
 interface TopToken {
   rank: number;
@@ -48,13 +49,59 @@ export default function Homepage() {
 
   useEffect(() => {
     loadHomepageData();
-    
-    // Refresh data every 30 seconds
-    const interval = setInterval(() => {
-      loadHomepageData();
-    }, 30000);
 
-    return () => clearInterval(interval);
+    // Only run WebSocket on client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Set up WebSocket for real-time updates (if authenticated)
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        wsClient.connect(token);
+
+        // Handle whale transactions
+        const handleWhaleTransaction = (data: any) => {
+          setWhaleTxs((prev) => [data, ...prev].slice(0, 10));
+        };
+
+        // Handle stats updates
+        const handleStatsUpdate = (data: any) => {
+          if (data.stats) {
+            setStats(data.stats);
+          }
+        };
+
+        wsClient.on('whale_transaction', handleWhaleTransaction);
+        wsClient.on('stats_update', handleStatsUpdate);
+
+        // Fallback: poll every 60 seconds as backup
+        const interval = setInterval(() => {
+          loadHomepageData();
+        }, 60000);
+
+        return () => {
+          wsClient.off('whale_transaction', handleWhaleTransaction);
+          wsClient.off('stats_update', handleStatsUpdate);
+          clearInterval(interval);
+        };
+      } catch (error) {
+        console.error('Failed to connect WebSocket:', error);
+        // Fallback to polling
+        const interval = setInterval(() => {
+          loadHomepageData();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+    } else {
+      // Public users: poll every 30 seconds
+      const interval = setInterval(() => {
+        loadHomepageData();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const loadHomepageData = async () => {

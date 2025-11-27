@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { IngestionService } from './services/ingestion.service';
 import { PositionsService } from './services/positions.service';
 import { DetectionService } from './services/detection.service';
+import { TokenDiscoveryService } from './services/token-discovery.service';
 
 @Injectable()
 export class JobsService {
@@ -15,6 +16,7 @@ export class JobsService {
     private ingestionService: IngestionService,
     private positionsService: PositionsService,
     private detectionService: DetectionService,
+    private tokenDiscoveryService: TokenDiscoveryService,
   ) {}
 
   /**
@@ -70,8 +72,24 @@ export class JobsService {
   }
 
   /**
+   * Discover new tokens from DEXs and external sources
+   * Runs every 15 minutes - discovers tokens BEFORE detection runs
+   */
+  @Cron('*/15 * * * *') // Every 15 minutes
+  async discoverTokens() {
+    try {
+      this.logger.log('Running token discovery...');
+      const result = await this.tokenDiscoveryService.runDiscovery();
+      this.logger.log(`Token discovery completed: ${result.discovered} discovered, ${result.added} added`);
+    } catch (error) {
+      this.logger.error(`Token discovery job failed: ${error.message}`, error.stack);
+    }
+  }
+
+  /**
    * Run accumulation detection
    * Runs every 10 minutes
+   * Now processes ALL tokens in database (including newly discovered ones)
    */
   @Cron('*/10 * * * *') // Every 10 minutes
   async runDetection() {
@@ -82,6 +100,19 @@ export class JobsService {
 
     this.isRunningDetection = true;
     try {
+      // First, run a quick discovery to catch any new tokens
+      // This ensures we detect signals for tokens discovered since last run
+      try {
+        const discoveryResult = await this.tokenDiscoveryService.runDiscovery();
+        if (discoveryResult.added > 0) {
+          this.logger.log(`Discovered ${discoveryResult.added} new tokens before detection`);
+        }
+      } catch (error) {
+        this.logger.warn(`Quick discovery before detection failed: ${error.message}`);
+        // Continue with detection even if discovery fails
+      }
+
+      // Then run detection on ALL tokens (including newly discovered ones)
       await this.detectionService.runDetection();
     } catch (error) {
       this.logger.error(`Detection worker job failed: ${error.message}`, error.stack);

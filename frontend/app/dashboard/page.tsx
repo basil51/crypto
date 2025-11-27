@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import { api } from '@/lib/api';
+import { wsClient } from '@/lib/websocket';
 import Link from 'next/link';
 import { TrendingUp, Zap, Bell, Wallet, Sparkles, Trophy, ArrowUpRight } from 'lucide-react';
 
@@ -75,14 +76,90 @@ export default function Dashboard() {
   const chains = ['ALL', 'ETH', 'SOL', 'BASE', 'BSC', 'ARB', 'MATIC'];
 
   useEffect(() => {
+    // Initial load
     loadDashboardData();
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      loadDashboardData();
-    }, 30000);
 
-    return () => clearInterval(interval);
+    // Set up WebSocket connection
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (token) {
+      wsClient.connect(token);
+
+      // Subscribe to dashboard updates
+      wsClient.subscribe(['dashboard_update', 'notification', 'whale_transaction', 'signal_update']);
+
+      // Handle dashboard updates
+      const handleDashboardUpdate = (data: any) => {
+        if (data.hotAccumulations) {
+          const accumulations: HotAccumulation[] = data.hotAccumulations
+            .filter((token: any) => selectedChain === 'ALL' || token.chain === selectedChain)
+            .slice(0, 10)
+            .map((token: any) => ({
+              tokenId: token.tokenId,
+              symbol: token.symbol,
+              chain: token.chain,
+              name: token.name || token.symbol,
+              contractAddress: token.contractAddress,
+              accumScore: token.accumScore,
+              whaleFlow: token.whaleFlow || '+$0',
+              price: token.price || '$0.00',
+              change: token.change || '+0%',
+            }));
+          setHotAccumulations(accumulations);
+        }
+        if (data.whaleAlerts) {
+          setWhaleAlerts(data.whaleAlerts);
+        }
+        if (data.smartMoneyWallets) {
+          setSmartMoneyWallets(data.smartMoneyWallets);
+        }
+        if (data.newBornTokens) {
+          setNewBornTokens(data.newBornTokens);
+        }
+        if (data.topGainers) {
+          setTopGainers(data.topGainers);
+        }
+      };
+
+      // Handle notifications
+      const handleNotification = (notification: any) => {
+        // Add new notification to whale alerts
+        if (notification.token) {
+          const newAlert: WhaleAlert = {
+            id: notification.id,
+            type: notification.alertType || 'WHALE_BUY',
+            token: {
+              symbol: notification.token.symbol || 'Unknown',
+              chain: notification.token.chain || 'ETH',
+            },
+            message: notification.message || 'Whale activity detected',
+            timestamp: notification.createdAt,
+            amount: notification.metadata?.amount,
+          };
+          setWhaleAlerts((prev) => [newAlert, ...prev].slice(0, 10));
+        }
+      };
+
+      wsClient.on('dashboard_update', handleDashboardUpdate);
+      wsClient.on('notification', handleNotification);
+
+      // Fallback: still poll every 60 seconds as backup
+      const interval = setInterval(() => {
+        loadDashboardData();
+      }, 60000);
+
+      return () => {
+        wsClient.off('dashboard_update', handleDashboardUpdate);
+        wsClient.off('notification', handleNotification);
+        clearInterval(interval);
+      };
+    } else {
+      // Fallback to polling if no token
+      const interval = setInterval(() => {
+        loadDashboardData();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
   }, [selectedChain]);
 
   const loadDashboardData = async () => {
@@ -122,7 +199,7 @@ export default function Dashboard() {
         .slice(0, 10)
         .map((notif: any) => ({
           id: notif.id,
-          type: notif.type || 'WHALE_BUY',
+          type: notif.alertType || notif.type || 'WHALE_BUY',
           token: {
             symbol: notif.token?.symbol || 'Unknown',
             chain: notif.token?.chain || 'ETH',

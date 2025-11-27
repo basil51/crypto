@@ -433,5 +433,63 @@ export class TheGraphService {
       return [];
     }
   }
+
+  /**
+   * Get recent pools with high liquidity (for token discovery)
+   */
+  async getRecentHighLiquidityPools(
+    network: SubgraphNetwork = 'uniswap-v2',
+    minLiquidityUSD: number = 10000,
+    maxAgeHours: number = 168,
+    limit: number = 100,
+  ): Promise<any[]> {
+    const query = `
+      query GetRecentPools($minLiquidity: String!, $minTimestamp: BigInt!, $limit: Int!) {
+        pools(
+          first: $limit
+          orderBy: totalValueLockedUSD
+          orderDirection: desc
+          where: {
+            totalValueLockedUSD_gte: $minLiquidity
+            createdAtTimestamp_gte: $minTimestamp
+          }
+        ) {
+          id
+          token0 {
+            id
+            symbol
+            name
+            decimals
+          }
+          token1 {
+            id
+            symbol
+            name
+            decimals
+          }
+          totalValueLockedUSD
+          volumeUSD
+          createdAtTimestamp
+        }
+      }
+    `;
+
+    try {
+      const minTimestamp = Math.floor((Date.now() - maxAgeHours * 3600000) / 1000);
+      const data = await this.query<{ pools: any[] }>(
+        network,
+        query,
+        {
+          minLiquidity: minLiquidityUSD.toString(),
+          minTimestamp: minTimestamp.toString(),
+          limit,
+        },
+      );
+      return data.pools || [];
+    } catch (error) {
+      this.logger.error(`Failed to get recent pools from ${network}: ${error.message}`);
+      return [];
+    }
+  }
 }
 

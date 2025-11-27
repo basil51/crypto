@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, NotFoundException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, NotFoundException, ConflictException } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateWalletDto } from './dto/create-wallet.dto';
@@ -25,6 +25,11 @@ export class WalletsController {
     return this.walletsService.findAll();
   }
 
+  @Get('by-address/:address')
+  async findByAddress(@Param('address') address: string) {
+    return this.walletsService.getWalletDetails(address);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const wallet = await this.walletsService.findOne(id);
@@ -32,6 +37,15 @@ export class WalletsController {
       throw new NotFoundException(`Wallet with ID ${id} not found`);
     }
     return wallet;
+  }
+
+  @Get(':address/performance-history')
+  async getPerformanceHistory(
+    @Param('address') address: string,
+    @Query('days') days?: string,
+  ) {
+    const daysNum = days ? parseInt(days, 10) : 30;
+    return this.walletsService.getPerformanceHistory(address, daysNum);
   }
 
   @Patch(':id')

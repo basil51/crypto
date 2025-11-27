@@ -320,6 +320,15 @@ class ApiClient {
     const query = queryParams.toString();
     return this.request<any[]>(`/tokens/alpha-screener${query ? `?${query}` : ''}`);
   }
+
+  // Wallet endpoints
+  async getWalletDetails(address: string) {
+    return this.request<any>(`/wallets/by-address/${address}`);
+  }
+
+  async getWalletPerformanceHistory(address: string, days: number = 30) {
+    return this.request<any[]>(`/wallets/${address}/performance-history?days=${days}`);
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

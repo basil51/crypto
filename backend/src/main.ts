@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from './app.module';
 import { SentryService } from './common/monitoring/sentry.service';
 import * as dotenv from 'dotenv';
@@ -39,6 +40,9 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   });
+
+  // Use WebSocket adapter
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   await app.listen(3001);
   console.log('Backend is running on http://localhost:3001');

@@ -5,6 +5,7 @@ import { IngestionService } from './services/ingestion.service';
 import { PositionsService } from './services/positions.service';
 import { DetectionService } from './services/detection.service';
 import { SellWallDetectorService } from './services/sell-wall-detector.service';
+import { TokenDiscoveryService } from './services/token-discovery.service';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { TokensModule } from '../tokens/tokens.module';
@@ -30,6 +31,7 @@ import { OrderbookModule } from '../orderbook/orderbook.module';
     PositionsService,
     DetectionService,
     SellWallDetectorService,
+    TokenDiscoveryService,
   ],
   exports: [
     JobsService,
@@ -37,6 +39,7 @@ import { OrderbookModule } from '../orderbook/orderbook.module';
     PositionsService,
     DetectionService,
     SellWallDetectorService,
+    TokenDiscoveryService,
   ],
 })
 export class JobsModule {}

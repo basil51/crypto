@@ -1,12 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AlertType, AlertStatus } from '@prisma/client';
+import { WebSocketService } from '../../websocket/websocket.service';
+import { AlertsService } from '../alerts.service';
 
 @Injectable()
 export class EnhancedAlertTriggerService {
   private readonly logger = new Logger(EnhancedAlertTriggerService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() @Inject(forwardRef(() => WebSocketService))
+    private websocketService?: WebSocketService,
+    @Optional() @Inject(forwardRef(() => AlertsService))
+    private alertsService?: AlertsService,
+  ) {}
 
   /**
    * Trigger whale buy alert
@@ -202,41 +210,33 @@ export class EnhancedAlertTriggerService {
 
   /**
    * Get users subscribed to a token
+   * Returns all PRO users with active subscriptions to ensure alerts are created for all tokens
    */
   private async getSubscribedUsers(tokenId: string) {
-    // Find users who have alerts for this token
-    const alerts = await this.prisma.alert.findMany({
+    // Get all PRO users with active subscriptions
+    // This ensures alerts are created for all tokens, not just ones users are already subscribed to
+    const users = await this.prisma.user.findMany({
       where: {
-        tokenId,
-        status: {
-          in: [AlertStatus.PENDING, AlertStatus.DELIVERED],
-        },
+        plan: 'PRO',
+        OR: [
+          { subscriptionStatus: 'active' },
+          {
+            subscriptionStatus: 'trialing',
+            subscriptionEndsAt: {
+              gt: new Date(),
+            },
+          },
+        ],
       },
       select: {
-        userId: true,
-        user: {
-          select: {
-            id: true,
-            plan: true,
-            subscriptionStatus: true,
-            subscriptionEndsAt: true,
-          },
-        },
+        id: true,
+        plan: true,
+        subscriptionStatus: true,
+        subscriptionEndsAt: true,
       },
-      distinct: ['userId'],
     });
 
-    // Filter to only PRO users with active subscriptions
-    return alerts
-      .map((a) => a.user)
-      .filter(
-        (user) =>
-          user &&
-          user.plan === 'PRO' &&
-          (user.subscriptionStatus === 'active' ||
-            (user.subscriptionStatus === 'trialing' && user.subscriptionEndsAt &&
-              new Date(user.subscriptionEndsAt) > new Date())),
-      );
+    return users;
   }
 
   /**
@@ -286,7 +286,7 @@ export class EnhancedAlertTriggerService {
         return;
       }
 
-      await this.prisma.alert.create({
+      const alert = await this.prisma.alert.create({
         data: {
           userId: data.userId,
           alertType: data.alertType,
@@ -296,11 +296,40 @@ export class EnhancedAlertTriggerService {
           metadata: data.metadata || {},
           status: AlertStatus.PENDING,
         },
+        include: {
+          token: true,
+          signal: {
+            include: {
+              token: true,
+            },
+          },
+        },
       });
 
       this.logger.log(
         `Created ${data.alertType} alert for user ${data.userId}, token ${data.tokenId}`,
       );
+
+      // Emit real-time notification via WebSocket
+      if (this.websocketService && this.alertsService) {
+        try {
+          const notification = await this.alertsService.getUserNotifications(
+            data.userId,
+            1,
+            false,
+          );
+          if (notification && notification.length > 0) {
+            await this.websocketService.emitNewNotification(
+              data.userId,
+              notification[0],
+            );
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Failed to emit WebSocket notification: ${error.message}`,
+          );
+        }
+      }
     } catch (error) {
       this.logger.error(
         `Failed to create alert: ${error.message}`,

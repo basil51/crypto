@@ -119,6 +119,33 @@ async function main() {
       active: true,
       metadata: { coingeckoId: 'matic-network' },
     },
+    {
+      chain: 'ethereum',
+      symbol: 'LINK',
+      name: 'Chainlink',
+      contractAddress: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+      decimals: 18,
+      active: true,
+      metadata: { coingeckoId: 'chainlink' },
+    },
+    {
+      chain: 'ethereum',
+      symbol: 'UNI',
+      name: 'Uniswap',
+      contractAddress: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+      decimals: 18,
+      active: true,
+      metadata: { coingeckoId: 'uniswap' },
+    },
+    {
+      chain: 'bsc',
+      symbol: 'BUSD',
+      name: 'Binance USD',
+      contractAddress: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+      decimals: 18,
+      active: true,
+      metadata: { coingeckoId: 'binance-usd' },
+    },
   ];
 
   const createdTokens = [];

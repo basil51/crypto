@@ -353,5 +353,55 @@ export class CoinGeckoService {
     // Otherwise, try to search by symbol and chain
     return this.searchToken(token.symbol, token.chain);
   }
+
+  /**
+   * Get trending coins from CoinGecko
+   */
+  async getTrendingCoins(): Promise<any> {
+    try {
+      const response = await this.client.get('/search/trending');
+      return response.data;
+    } catch (error: any) {
+      this.logger.warn(`Failed to get trending coins: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get new coin listings from CoinGecko
+   */
+  async getNewCoinListings(perPage: number = 50): Promise<any> {
+    try {
+      const response = await this.client.get('/coins/new', {
+        params: { per_page: perPage },
+      });
+      return response.data;
+    } catch (error: any) {
+      // New listings endpoint might not be available in free tier
+      this.logger.debug(`New listings endpoint not available: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get coin data by CoinGecko ID
+   */
+  async getCoinData(coingeckoId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/coins/${coingeckoId}`, {
+        params: {
+          localization: false,
+          tickers: false,
+          market_data: true,
+          community_data: false,
+          developer_data: false,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      this.logger.debug(`Failed to get coin data for ${coingeckoId}: ${error.message}`);
+      return null;
+    }
+  }
 }
 

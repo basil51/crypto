@@ -1,19 +1,45 @@
 'use client';
 
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import NotificationBell from './NotificationBell';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
+
+  // Get display name from email (part before @)
+  const getUserDisplayName = () => {
+    if (!user?.email) return 'User';
+    return user.email.split('@')[0];
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   return (
     <nav className="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-purple-500/20 z-50">
@@ -116,13 +142,57 @@ export default function Navbar() {
             {isAuthenticated ? (
               <>
                 <NotificationBell />
-                <span className="text-sm text-white font-medium hidden sm:block">{user?.email}</span>
-                <button
-                  onClick={handleLogout}
-                  className="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-red-500/50 transition"
+                <div 
+                  className="relative pt-2"
+                  ref={userMenuRef}
+                  onMouseEnter={() => setIsUserMenuOpen(true)}
+                  onMouseLeave={() => setIsUserMenuOpen(false)}
                 >
-                  Logout
-                </button>
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-sm text-white font-medium hidden sm:block">
+                      Hi, {getUserDisplayName()}
+                    </span>
+                  </div>
+                  
+                  {/* Dropdown Menu */}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-56 bg-black/95 backdrop-blur-xl border border-purple-500/20 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <div className="py-2">
+                        {/* Welcome Section */}
+                        <div className="px-4 py-3 border-b border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Welcome</p>
+                          <p className="text-sm font-semibold text-white">{getUserDisplayName()}</p>
+                        </div>
+                        
+                        {/* Sign Out */}
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition"
+                        >
+                          Sign Out
+                        </button>
+                        
+                        {/* Separator */}
+                        <div className="my-1 border-t border-white/10"></div>
+                        
+                        {/* Profile Link */}
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-white hover:bg-white/5 transition"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Profile
+                        </Link>
+                        
+                        {/* Space for future items */}
+                        {/* Add more user account related items here */}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>

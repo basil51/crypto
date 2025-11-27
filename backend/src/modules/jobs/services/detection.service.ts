@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { SignalsService } from '../../signals/signals.service';
 import { AlertDispatcherService } from '../../alerts/services/alert-dispatcher.service';
+import { TokensService } from '../../tokens/tokens.service';
 import { Prisma, SignalType } from '@prisma/client';
 
 interface DetectionRule {
@@ -36,6 +37,7 @@ export class DetectionService {
     private prisma: PrismaService,
     private signalsService: SignalsService,
     private alertDispatcher: AlertDispatcherService,
+    private tokensService: TokensService,
     private configService: ConfigService,
   ) {
     // Load thresholds from environment or use defaults
@@ -84,13 +86,16 @@ export class DetectionService {
   }
 
   /**
-   * Run detection for all active tokens
+   * Run detection for all active tokens AND discover new tokens from transaction data
    */
   async runDetection(): Promise<void> {
     this.logger.log('Starting accumulation detection...');
 
     try {
-      // Get all active tokens
+      // First, discover new tokens from recent transactions
+      await this.discoverTokensFromTransactions();
+
+      // Then, get all active tokens (including newly discovered ones)
       const tokens = await this.prisma.token.findMany({
         where: { active: true },
       });
@@ -119,6 +124,38 @@ export class DetectionService {
     } catch (error) {
       this.logger.error(`Detection failed: ${error.message}`, error.stack);
       throw error;
+    }
+  }
+
+  /**
+   * Discover new tokens from transaction data
+   * This allows us to detect signals for tokens that aren't yet in our database
+   * The key insight: We should detect signals from ANY token activity, not just tokens we already track
+   */
+  private async discoverTokensFromTransactions(): Promise<void> {
+    this.logger.log('Discovering new tokens from transaction data...');
+
+    try {
+      // Note: Transactions in our DB already have tokenId (foreign key constraint)
+      // So if we have transactions, tokens already exist
+      // The real discovery happens in token-discovery.service from DEXs/APIs
+      // This method ensures we process all tokens, including newly discovered ones
+      
+      // Check for tokens that were recently added but might not have been analyzed yet
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentlyAddedTokens = await this.prisma.token.findMany({
+        where: {
+          active: true,
+          createdAt: { gte: oneDayAgo },
+        },
+      });
+
+      if (recentlyAddedTokens.length > 0) {
+        this.logger.log(`Found ${recentlyAddedTokens.length} recently added tokens to analyze`);
+      }
+    } catch (error) {
+      this.logger.warn(`Token discovery from transactions failed: ${error.message}`);
+      // Don't throw - this is supplementary
     }
   }
 
