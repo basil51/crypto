@@ -39,6 +39,17 @@ async function main() {
     },
   });
 
+  const admin2User = await prisma.user.create({
+    data: {
+      email: 'admin2@test.com',
+      passwordHash,
+      role: 'ADMIN',
+      plan: 'PRO',
+      subscriptionStatus: 'active',
+      subscriptionEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+    },
+  });
+
   const testUser = await prisma.user.create({
     data: {
       email: 'user@test.com',
@@ -54,13 +65,16 @@ async function main() {
       passwordHash,
       role: 'USER',
       plan: 'PRO',
+      subscriptionStatus: 'active',
+      subscriptionEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
     },
   });
 
-  console.log('✅ Created 3 test users');
-  console.log('   - admin@test.com / password123 (ADMIN, PRO)');
+  console.log('✅ Created 4 test users');
+  console.log('   - admin@test.com / password123 (ADMIN, PRO, active subscription)');
+  console.log('   - admin2@test.com / password123 (ADMIN, PRO, active subscription)');
   console.log('   - user@test.com / password123 (USER, FREE)');
-  console.log('   - pro@test.com / password123 (USER, PRO)');
+  console.log('   - pro@test.com / password123 (USER, PRO, active subscription)');
 
   // Create test tokens
   console.log('🪙 Creating test tokens...');
@@ -332,9 +346,10 @@ async function main() {
 
   console.log('\n✨ Seed completed successfully!');
   console.log('\n📋 Test Credentials:');
-  console.log('   Admin: admin@test.com / password123');
-  console.log('   User:  user@test.com / password123');
-  console.log('   Pro:   pro@test.com / password123');
+  console.log('   Admin:  admin@test.com / password123 (PRO with active subscription)');
+  console.log('   Admin2: admin2@test.com / password123 (PRO with active subscription)');
+  console.log('   User:   user@test.com / password123 (FREE plan)');
+  console.log('   Pro:    pro@test.com / password123 (PRO with active subscription)');
   console.log('\n🌐 Frontend: http://localhost:3000');
   console.log('🔌 Backend:  http://localhost:3001/api');
 }
