@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { BitqueryService } from '../../integrations/services/bitquery.service';
+import { CovalentService } from '../../integrations/services/covalent.service';
 import { TokensService } from '../../tokens/tokens.service';
 import { EnhancedAlertTriggerService } from './enhanced-alert-trigger.service';
 
@@ -65,7 +65,7 @@ export class BroadMonitoringService {
 
   constructor(
     private prisma: PrismaService,
-    private bitqueryService: BitqueryService,
+    private covalentService: CovalentService,
     private tokensService: TokensService,
     private alertTriggerService: EnhancedAlertTriggerService,
   ) {}
@@ -81,8 +81,8 @@ export class BroadMonitoringService {
   }> {
     this.logger.log('🔍 Starting broad token monitoring for whale activity...');
 
-    if (!this.bitqueryService.isAvailable()) {
-      this.logger.warn('Bitquery not configured, skipping broad monitoring');
+    if (!this.covalentService.isAvailable()) {
+      this.logger.warn('Covalent not configured, skipping broad monitoring');
       return { processed: 0, alertsCreated: 0, newTokensDiscovered: 0 };
     }
 
@@ -92,11 +92,11 @@ export class BroadMonitoringService {
 
     try {
       // Fetch large transfers across all tokens (last hour)
-      const networks = ['ethereum', 'bsc', 'matic'];
+      const networks = ['ethereum', 'bsc', 'polygon'];
       
       for (const network of networks) {
         try {
-          const transfers = await this.bitqueryService.getAllLargeTransfers(
+          const transfers = await this.covalentService.getAllLargeTransfers(
             network,
             this.minTransferUSD,
             100, // Limit to 100 per network to avoid overwhelming the system
@@ -224,6 +224,8 @@ export class BroadMonitoringService {
           tokenSymbol,
           tokenName,
           chain,
+          contractAddress: normalizedTokenAddress,
+          tokenAddress: normalizedTokenAddress,
           source: 'broad_monitoring',
         },
       );
@@ -242,6 +244,8 @@ export class BroadMonitoringService {
           tokenSymbol,
           tokenName,
           chain,
+          contractAddress: normalizedTokenAddress,
+          tokenAddress: normalizedTokenAddress,
           source: 'broad_monitoring',
         },
       );
@@ -264,6 +268,8 @@ export class BroadMonitoringService {
           tokenSymbol,
           tokenName,
           chain,
+          contractAddress: normalizedTokenAddress,
+          tokenAddress: normalizedTokenAddress,
           source: 'broad_monitoring',
         },
       );
@@ -283,6 +289,8 @@ export class BroadMonitoringService {
           tokenSymbol,
           tokenName,
           chain,
+          contractAddress: normalizedTokenAddress,
+          tokenAddress: normalizedTokenAddress,
           source: 'broad_monitoring',
         },
       );
@@ -296,14 +304,15 @@ export class BroadMonitoringService {
   }
 
   /**
-   * Map Bitquery network name to our chain format
+   * Map Covalent network name to our chain format
    */
   private mapNetworkToChain(network: string): string {
     const mapping: Record<string, string> = {
       ethereum: 'ethereum',
       bsc: 'bsc',
-      matic: 'polygon',
       polygon: 'polygon',
+      base: 'base',
+      arbitrum: 'arbitrum',
     };
     return mapping[network] || network;
   }

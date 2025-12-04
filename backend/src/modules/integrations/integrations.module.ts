@@ -3,7 +3,8 @@ import { IntegrationsService } from './integrations.service';
 import { IntegrationsController } from './integrations.controller';
 import { MoralisService } from './services/moralis.service';
 import { AlchemyService } from './services/alchemy.service';
-import { BitqueryService } from './services/bitquery.service';
+import { CovalentService } from './services/covalent.service';
+import { QuickNodeService } from './services/quicknode.service';
 import { EtherscanService } from './services/etherscan.service';
 import { TheGraphService } from './services/thegraph.service';
 import { DexAnalyticsService } from './services/dex-analytics.service';
@@ -16,7 +17,8 @@ import { CoinGeckoService } from './services/coingecko.service';
     IntegrationsService,
     MoralisService,
     AlchemyService,
-    BitqueryService,
+    CovalentService,
+    QuickNodeService,
     EtherscanService,
     TheGraphService,
     DexAnalyticsService,
@@ -27,7 +29,8 @@ import { CoinGeckoService } from './services/coingecko.service';
     IntegrationsService,
     MoralisService,
     AlchemyService,
-    BitqueryService,
+    CovalentService,
+    QuickNodeService,
     EtherscanService,
     TheGraphService,
     DexAnalyticsService,

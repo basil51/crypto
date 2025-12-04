@@ -6,7 +6,7 @@ import { TokensService } from '../../tokens/tokens.service';
 import { TheGraphService } from '../../integrations/services/thegraph.service';
 import { CoinGeckoService } from '../../integrations/services/coingecko.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
-import { BitqueryService } from '../../integrations/services/bitquery.service';
+import { CovalentService } from '../../integrations/services/covalent.service';
 import { MoralisService } from '../../integrations/services/moralis.service';
 import { AlchemyService } from '../../integrations/services/alchemy.service';
 
@@ -38,7 +38,7 @@ export class TokenDiscoveryService {
     private coinGeckoService: CoinGeckoService,
     private integrationsService: IntegrationsService,
     private configService: ConfigService,
-    private bitqueryService: BitqueryService,
+    private covalentService: CovalentService,
     private moralisService: MoralisService,
     private alchemyService: AlchemyService,
   ) {
@@ -125,7 +125,7 @@ export class TokenDiscoveryService {
         this.logger.error(`Failed to discover tokens from signals: ${error.message}`, error.stack);
       }
 
-      // 5. Discover from large whale transactions (if Bitquery is available)
+      // 5. Discover from large whale transactions (if Covalent is available)
       try {
         const whaleTokens = await this.discoverFromWhaleTransactions();
         discoveredTokens.push(...whaleTokens);
@@ -401,15 +401,48 @@ export class TokenDiscoveryService {
     const discovered: DiscoveredToken[] = [];
 
     try {
-      // Get recent large transactions from Bitquery (if available)
-      if (this.bitqueryService && this.bitqueryService.isAvailable()) {
-        // Query for large transfers in last 24 hours
-        // Note: Bitquery getLargeTransfers requires a token address, so we'll skip this for now
-        // and focus on DEX and CoinGecko discovery
-        // TODO: Implement whale transaction discovery when we have a way to query all large transfers
+      // Get recent large transactions from Covalent (if available)
+      if (this.covalentService && this.covalentService.isAvailable()) {
+        // Query for large transfers across all tokens in last 24 hours
+        const chains = ['ethereum', 'bsc', 'polygon'];
+        
+        for (const chain of chains) {
+          try {
+            const transfers = await this.covalentService.getAllLargeTransfers(
+              chain,
+              50000, // $50k minimum for discovery
+              50, // Limit to 50 per chain
+            );
 
-        // Whale transaction discovery will be implemented later
-        // when we have a better way to query all large transfers across tokens
+            for (const transfer of transfers) {
+              const tokenAddress = transfer.currency.address.toLowerCase();
+              
+              // Check if token already exists
+              const exists = await this.tokensService.findByAddress(chain, tokenAddress);
+              if (!exists && this.isNewToken(tokenAddress, chain)) {
+                const metadata = await this.getTokenMetadata(tokenAddress, chain);
+                if (metadata) {
+                  discovered.push({
+                    chain,
+                    symbol: transfer.currency.symbol || metadata.symbol || 'UNKNOWN',
+                    name: transfer.currency.name || metadata.name || 'Unknown Token',
+                    contractAddress: tokenAddress,
+                    decimals: metadata.decimals || 18,
+                    source: 'whale' as const,
+                    metadata: {
+                      discoveredFrom: 'whale_transaction',
+                      transactionHash: transfer.transaction.hash,
+                      amount: transfer.amount,
+                      discoveredAt: new Date().toISOString(),
+                    },
+                  });
+                }
+              }
+            }
+          } catch (error) {
+            this.logger.debug(`Failed to get whale transactions for ${chain}: ${error.message}`);
+          }
+        }
       }
     } catch (error) {
       this.logger.error(`Failed to discover tokens from whale transactions: ${error.message}`);
@@ -594,26 +627,15 @@ export class TokenDiscoveryService {
           if (tokenAddress && typeof tokenAddress === 'string' && tokenAddress.startsWith('0x') && tokenAddress.length === 42) {
             const normalizedAddr = tokenAddress.toLowerCase();
             
-            // Debug: Log before checking
-            this.logger.debug(
-              `Checking if token exists: "${tokenName}" (${tokenSymbol}), ` +
-              `Chain=${chain}, Address=${normalizedAddr}`
-            );
-            
             // Check if this token already exists in our database
             const exists = await this.tokensService.findByAddress(chain, normalizedAddr);
             if (exists) {
               tokensAlreadyExist++;
-              this.logger.debug(`Token "${tokenName}" (${tokenSymbol}) already exists in database`);
+              //this.logger.debug(`Token "${tokenName}" (${tokenSymbol}) already exists in database`);
             } else if (this.isNewToken(normalizedAddr, chain)) {
               tokenAddresses.add(`${chain}:${normalizedAddr}`);
               tokensFound++;
-              this.logger.debug(
-                `Found new token from signal relation: "${tokenName}" (${tokenSymbol}) - ${normalizedAddr} on ${chain}`
-              );
-            } else {
-              this.logger.debug(`Token "${tokenName}" (${tokenSymbol}) is a major token (skipped)`);
-            }
+            } 
           }
 
           // Also check metadata for additional token addresses (if metadata exists)

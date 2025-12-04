@@ -229,6 +229,8 @@ export class SellWallDetectorService {
           {
             totalValue: wall.totalValue,
             priceRange: wall.priceRange,
+            tokenSymbol: token.symbol,
+            tokenName: token.name,
           },
         );
       } catch (error) {
@@ -272,6 +274,8 @@ export class SellWallDetectorService {
 
         // Trigger sell wall removed alert
         const tokenId = (wall.metadata as any)?.tokenId;
+        const tokenSymbol = (wall.metadata as any)?.tokenSymbol;
+        const tokenName = (wall.metadata as any)?.tokenName;
         if (tokenId) {
           try {
             await this.alertTrigger.triggerSellWallRemovedAlert(
@@ -281,6 +285,8 @@ export class SellWallDetectorService {
                 price: Number(wall.price),
                 quantity: Number(wall.quantity),
                 totalValue: Number(wall.totalValue),
+                tokenSymbol,
+                tokenName,
               },
             );
           } catch (error) {

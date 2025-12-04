@@ -13,6 +13,10 @@ export class JobsService {
   private isUpdatingPositions = false;
   private isRunningDetection = false;
   private isBroadMonitoring = false;
+  private isIngestingWhaleEvents = false;
+  private isIngestingDexSwaps = false;
+  private isIngestingLpChanges = false;
+  private isIngestingSolanaTransactions = false;
 
   constructor(
     private ingestionService: IngestionService,
@@ -153,6 +157,90 @@ export class JobsService {
       this.logger.error(`Broad monitoring job failed: ${error.message}`, error.stack);
     } finally {
       this.isBroadMonitoring = false;
+    }
+  }
+
+  /**
+   * Ingest whale events from Covalent
+   * Runs every 15 minutes to store large transfers as WhaleEvent records
+   */
+  @Cron('*/15 * * * *') // Every 15 minutes
+  async ingestWhaleEvents() {
+    if (this.isIngestingWhaleEvents) {
+      this.logger.warn('Whale event ingestion already in progress, skipping...');
+      return;
+    }
+
+    this.isIngestingWhaleEvents = true;
+    try {
+      await this.ingestionService.ingestWhaleEvents();
+    } catch (error) {
+      this.logger.error(`Whale event ingestion job failed: ${error.message}`, error.stack);
+    } finally {
+      this.isIngestingWhaleEvents = false;
+    }
+  }
+
+  /**
+   * Ingest DEX swap events from The Graph
+   * Runs every 20 minutes to store large swaps as DexSwapEvent records
+   */
+  @Cron('*/20 * * * *') // Every 20 minutes
+  async ingestDexSwaps() {
+    if (this.isIngestingDexSwaps) {
+      this.logger.warn('DEX swap ingestion already in progress, skipping...');
+      return;
+    }
+
+    this.isIngestingDexSwaps = true;
+    try {
+      await this.ingestionService.ingestDexSwaps();
+    } catch (error) {
+      this.logger.error(`DEX swap ingestion job failed: ${error.message}`, error.stack);
+    } finally {
+      this.isIngestingDexSwaps = false;
+    }
+  }
+
+  /**
+   * Ingest LP change events from The Graph
+   * Runs every 30 minutes to store liquidity pool mints/burns as LpChangeEvent records
+   */
+  @Cron('*/30 * * * *') // Every 30 minutes
+  async ingestLpChanges() {
+    if (this.isIngestingLpChanges) {
+      this.logger.warn('LP change ingestion already in progress, skipping...');
+      return;
+    }
+
+    this.isIngestingLpChanges = true;
+    try {
+      await this.ingestionService.ingestLpChanges();
+    } catch (error) {
+      this.logger.error(`LP change ingestion job failed: ${error.message}`, error.stack);
+    } finally {
+      this.isIngestingLpChanges = false;
+    }
+  }
+
+  /**
+   * Ingest Solana transactions from QuickNode
+   * Runs every 10 minutes to store Solana token transfers as Transaction records
+   */
+  @Cron('*/10 * * * *') // Every 10 minutes
+  async ingestSolanaTransactions() {
+    if (this.isIngestingSolanaTransactions) {
+      this.logger.warn('Solana transaction ingestion already in progress, skipping...');
+      return;
+    }
+
+    this.isIngestingSolanaTransactions = true;
+    try {
+      await this.ingestionService.ingestSolanaTransactions();
+    } catch (error) {
+      this.logger.error(`Solana transaction ingestion job failed: ${error.message}`, error.stack);
+    } finally {
+      this.isIngestingSolanaTransactions = false;
     }
   }
 }

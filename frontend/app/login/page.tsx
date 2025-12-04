@@ -50,9 +50,7 @@ export default function LoginPage() {
   };
 
   const testUsers = [
-    { email: 'admin@test.com', password: 'password123', role: 'ADMIN', plan: 'PRO' },
-    { email: 'user@test.com', password: 'password123', role: 'USER', plan: 'FREE' },
-    { email: 'pro@test.com', password: 'password123', role: 'USER', plan: 'PRO' },
+    { email: 'test@example.com', password: 'password123', role: 'USER', plan: 'PRO' },
   ];
 
   const fillCredentials = (email: string, password: string) => {

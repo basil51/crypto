@@ -91,9 +91,11 @@ export default function BillingPage() {
     }
   };
 
-  const isPro = userInfo?.plan === 'PRO' && 
-    (userInfo?.subscriptionStatus === 'active' || 
-     (userInfo?.subscriptionEndsAt && new Date(userInfo.subscriptionEndsAt) > new Date()));
+  // Check if user is Pro - use userInfo from API, fallback to user from context
+  const currentUser = userInfo || user;
+  const isPro = currentUser?.plan === 'PRO' && 
+    (currentUser?.subscriptionStatus === 'active' || 
+     (currentUser?.subscriptionEndsAt && new Date(currentUser.subscriptionEndsAt) > new Date()));
 
   return (
     <ProtectedRoute>
@@ -119,14 +121,14 @@ export default function BillingPage() {
                   <div className="text-sm text-gray-300 mt-1">
                     {isPro ? (
                       <>
-                        {userInfo?.subscriptionStatus === 'active' ? (
+                        {currentUser?.subscriptionStatus === 'active' ? (
                           <span className="text-green-400">Active</span>
                         ) : (
                           <span className="text-yellow-400">Expiring Soon</span>
                         )}
-                        {userInfo?.subscriptionEndsAt && (
+                        {currentUser?.subscriptionEndsAt && (
                           <span className="ml-2 text-gray-400">
-                            • Renews {new Date(userInfo.subscriptionEndsAt).toLocaleDateString()}
+                            • Renews {new Date(currentUser.subscriptionEndsAt).toLocaleDateString()}
                           </span>
                         )}
                       </>

@@ -54,33 +54,51 @@ export class DetectionService {
 
   /**
    * Initialize detection rules
+   * Updated with Roadmap 4.0 rules:
+   * Rule 1: Large Transfers (Covalent) - covered by detectLargeInflows
+   * Rule 2: Whale Clusters (Covalent) - covered by detectConcentratedBuys
+   * Rule 3: Exchange Flows (Covalent + Scan APIs) - covered by detectLargeInflows
+   * Rule 4: Holding Pattern (existing)
+   * Rule 5: Volume Spike (existing)
+   * Rule 6: DEX Liquidity Increase (The Graph) - NEW
+   * Rule 7: Repeated Large Swaps (The Graph) - NEW
    */
   private initializeRules() {
     this.rules = [
       {
         name: 'Concentrated Buys',
-        weight: 0.3,
+        weight: 0.25,
         execute: this.detectConcentratedBuys.bind(this),
       },
       {
         name: 'Large Wallet Inflows',
-        weight: 0.25,
+        weight: 0.2,
         execute: this.detectLargeInflows.bind(this),
       },
       {
         name: 'New Whale Addresses',
-        weight: 0.2,
+        weight: 0.15,
         execute: this.detectNewWhaleAddresses.bind(this),
       },
       {
         name: 'Holding Pattern Increase',
-        weight: 0.15,
+        weight: 0.12,
         execute: this.detectHoldingPatterns.bind(this),
       },
       {
         name: 'Transaction Volume Spike',
-        weight: 0.1,
+        weight: 0.08,
         execute: this.detectVolumeSpike.bind(this),
+      },
+      {
+        name: 'DEX Liquidity Increase',
+        weight: 0.1,
+        execute: this.detectDexLiquidityIncrease.bind(this),
+      },
+      {
+        name: 'Repeated Large Swaps',
+        weight: 0.1,
+        execute: this.detectRepeatedLargeSwaps.bind(this),
       },
     ];
   }
@@ -136,23 +154,72 @@ export class DetectionService {
     this.logger.log('Discovering new tokens from transaction data...');
 
     try {
-      // Note: Transactions in our DB already have tokenId (foreign key constraint)
-      // So if we have transactions, tokens already exist
-      // The real discovery happens in token-discovery.service from DEXs/APIs
-      // This method ensures we process all tokens, including newly discovered ones
-      
-      // Check for tokens that were recently added but might not have been analyzed yet
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const recentlyAddedTokens = await this.prisma.token.findMany({
+      // Get all unique tokenIds from recent transactions (last 7 days)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentTransactions = await this.prisma.transaction.findMany({
         where: {
-          active: true,
-          createdAt: { gte: oneDayAgo },
+          timestamp: { gte: sevenDaysAgo },
         },
+        select: {
+          tokenId: true,
+          raw: true,
+        },
+        distinct: ['tokenId'],
       });
 
-      if (recentlyAddedTokens.length > 0) {
-        this.logger.log(`Found ${recentlyAddedTokens.length} recently added tokens to analyze`);
+      // For each tokenId in transactions, ensure token exists
+      for (const tx of recentTransactions) {
+        const tokenId = tx.tokenId;
+        let token = await this.prisma.token.findUnique({
+          where: { id: tokenId },
+        });
+
+        if (!token) {
+          // Token doesn't exist but we have transactions for it - create it
+          const rawData = tx.raw as any;
+          const tokenSymbol = rawData?.tokenSymbol || rawData?.symbol || `TOKEN_${tokenId.slice(0, 8)}`;
+          const tokenName = rawData?.tokenName || rawData?.name || 'Unknown Token';
+          const chain = rawData?.chain || 'ethereum';
+          const contractAddress = rawData?.contractAddress || rawData?.address || tokenId;
+          const decimals = rawData?.decimals || 18;
+
+          try {
+            token = await this.prisma.token.create({
+              data: {
+                id: tokenId,
+                chain,
+                symbol: tokenSymbol,
+                name: tokenName,
+                contractAddress,
+                decimals,
+                active: true,
+                metadata: {
+                  createdFromTransaction: true,
+                  discoveredAt: new Date().toISOString(),
+                },
+              },
+            });
+            this.logger.log(
+              `Created missing token ${tokenId} (${tokenSymbol}) from transaction data`,
+            );
+          } catch (createError: any) {
+            if (createError.code !== 'P2002') {
+              this.logger.warn(
+                `Failed to create token ${tokenId}: ${createError.message}`,
+              );
+            }
+          }
+        } else if (!token.active) {
+          // Token exists but is inactive - activate it so we can detect signals
+          await this.prisma.token.update({
+            where: { id: tokenId },
+            data: { active: true },
+          });
+          this.logger.log(`Activated token ${tokenId} (${token.symbol}) for signal detection`);
+        }
       }
+
+      this.logger.log(`Processed ${recentTransactions.length} tokens from transaction data`);
     } catch (error) {
       this.logger.warn(`Token discovery from transactions failed: ${error.message}`);
       // Don't throw - this is supplementary
@@ -422,6 +489,114 @@ export class DetectionService {
   }
 
   /**
+   * Detection Rule 6: DEX Liquidity Increase
+   * Detects significant liquidity pool additions (mints) via The Graph
+   */
+  private async detectDexLiquidityIncrease(context: DetectionContext): Promise<number> {
+    const { tokenId, timeWindow } = context;
+
+    try {
+      // Get LP change events (mints) in the time window
+      const lpChanges = await this.prisma.lpChangeEvent.findMany({
+        where: {
+          tokenId,
+          changeType: 'mint', // Only mints (liquidity additions)
+          timestamp: {
+            gte: timeWindow.start,
+            lte: timeWindow.end,
+          },
+        },
+      });
+
+      if (lpChanges.length === 0) {
+        return 0;
+      }
+
+      // Calculate total liquidity added
+      const totalLiquidityUSD = lpChanges.reduce((sum, change) => {
+        const amountUSD = change.amountUSD ? Number(change.amountUSD) : 0;
+        return sum + amountUSD;
+      }, 0);
+
+      // Score based on liquidity added
+      let score = 0;
+      if (totalLiquidityUSD > 50000) score += 30; // $50k+
+      if (totalLiquidityUSD > 100000) score += 30; // $100k+
+      if (totalLiquidityUSD > 500000) score += 40; // $500k+
+
+      // Also consider number of LP additions (multiple adds = strong signal)
+      if (lpChanges.length >= 3) score += 20;
+      if (lpChanges.length >= 5) score += 20;
+
+      return Math.min(100, score);
+    } catch (error) {
+      this.logger.warn(`Failed to detect DEX liquidity increase: ${error.message}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Detection Rule 7: Repeated Large Swaps
+   * Detects multiple large swaps from the same wallet or multiple wallets (accumulation pattern)
+   */
+  private async detectRepeatedLargeSwaps(context: DetectionContext): Promise<number> {
+    const { tokenId, timeWindow } = context;
+
+    try {
+      // Get large swap events in the time window
+      const swaps = await this.prisma.dexSwapEvent.findMany({
+        where: {
+          tokenId,
+          swapType: 'buy', // Only buy swaps (accumulation)
+          timestamp: {
+            gte: timeWindow.start,
+            lte: timeWindow.end,
+          },
+        },
+      });
+
+      if (swaps.length === 0) {
+        return 0;
+      }
+
+      // Filter for large swaps (>$10k)
+      const largeSwaps = swaps.filter((swap) => {
+        const amountIn = Number(swap.amountIn);
+        const amountOut = Number(swap.amountOut);
+        // Estimate USD value (simplified - in production, use price data)
+        const estimatedValue = Math.max(amountIn, amountOut);
+        return estimatedValue > 10000;
+      });
+
+      if (largeSwaps.length === 0) {
+        return 0;
+      }
+
+      // Count unique wallets making large swaps
+      const uniqueWallets = new Set(
+        largeSwaps.map((swap) => swap.walletAddress).filter(Boolean),
+      );
+
+      // Score based on number of large swaps and unique wallets
+      let score = 0;
+      
+      // Multiple large swaps = strong signal
+      if (largeSwaps.length >= 3) score += 30;
+      if (largeSwaps.length >= 5) score += 30;
+      if (largeSwaps.length >= 10) score += 40;
+
+      // Multiple unique wallets = accumulation pattern
+      if (uniqueWallets.size >= 3) score += 20;
+      if (uniqueWallets.size >= 5) score += 20;
+
+      return Math.min(100, score);
+    } catch (error) {
+      this.logger.warn(`Failed to detect repeated large swaps: ${error.message}`);
+      return 0;
+    }
+  }
+
+  /**
    * Check if an address is likely an exchange
    * This is a simplified check - in production, use a known exchange address list
    */
@@ -442,6 +617,67 @@ export class DetectionService {
     windowLabel: string,
   ): Promise<void> {
     try {
+      // Ensure token exists before creating signal
+      let token = await this.prisma.token.findUnique({
+        where: { id: tokenId },
+      });
+
+      if (!token) {
+        // Token doesn't exist, try to get token info from transactions
+        const sampleTransaction = await this.prisma.transaction.findFirst({
+          where: { tokenId },
+          include: { token: true },
+        });
+
+        if (!sampleTransaction) {
+          this.logger.warn(
+            `Cannot create signal: Token ${tokenId} does not exist and no transactions found`,
+          );
+          return;
+        }
+
+        // Try to get token info from transaction raw data or create with defaults
+        const rawData = sampleTransaction.raw as any;
+        const tokenSymbol = rawData?.tokenSymbol || rawData?.symbol || 'UNKNOWN';
+        const tokenName = rawData?.tokenName || rawData?.name || 'Unknown Token';
+        const chain = rawData?.chain || 'ethereum';
+        const contractAddress = rawData?.contractAddress || rawData?.address || '0x0000000000000000000000000000000000000000';
+        const decimals = rawData?.decimals || 18;
+
+        try {
+          token = await this.prisma.token.create({
+            data: {
+              id: tokenId,
+              chain,
+              symbol: tokenSymbol,
+              name: tokenName,
+              contractAddress,
+              decimals,
+              active: true,
+              metadata: {
+                createdFromSignal: true,
+                detectedAt: new Date().toISOString(),
+              },
+            },
+          });
+          this.logger.log(
+            `Created missing token ${tokenId} (${tokenSymbol}) from signal detection`,
+          );
+        } catch (createError: any) {
+          // If creation fails (e.g., ID already exists), try to fetch it
+          if (createError.code === 'P2002') {
+            token = await this.prisma.token.findUnique({
+              where: { id: tokenId },
+            });
+          } else {
+            this.logger.warn(
+              `Failed to create token ${tokenId}: ${createError.message}`,
+            );
+            return;
+          }
+        }
+      }
+
       // Get wallets involved in the time window
       const transactions = await this.prisma.transaction.findMany({
         where: {

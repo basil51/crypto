@@ -158,6 +158,98 @@ export class TokensService {
   }
 
   /**
+   * Ensure a token record exists (used when alerts arrive for unknown tokens)
+   * Tries several lookup strategies before creating a lightweight entry.
+   */
+  async ensureTokenExists(params: {
+    tokenId?: string;
+    chain?: string;
+    contractAddress?: string;
+    symbol?: string;
+    name?: string;
+    decimals?: number;
+    metadata?: Record<string, any>;
+    active?: boolean;
+  }): Promise<Token | null> {
+    const normalizedChain = (params.chain || 'ethereum').toLowerCase();
+    const normalizedAddress = params.contractAddress
+      ? params.contractAddress.toLowerCase()
+      : undefined;
+
+    // 1. Attempt direct lookup by tokenId (if provided)
+    let existing: Token | null = null;
+    if (params.tokenId) {
+      existing = await this.prisma.token.findUnique({
+        where: { id: params.tokenId },
+      });
+    }
+
+    // 2. Lookup by contract address
+    if (!existing && normalizedAddress) {
+      existing = await this.findByAddress(normalizedChain, normalizedAddress);
+    }
+
+    // 3. Lookup by symbol as a last resort
+    if (!existing && params.symbol) {
+      existing = await this.findBySymbol(normalizedChain, params.symbol);
+    }
+
+    // Reactivate token if it exists but inactive
+    if (existing) {
+      if (!existing.active) {
+        existing = await this.update(existing.id, { active: true });
+      }
+      return existing;
+    }
+
+    const symbol = params.symbol;
+    const name = params.name || params.symbol;
+
+    if (!symbol || !name) {
+      this.logger.warn(
+        `ensureTokenExists: Missing symbol/name (tokenId=${params.tokenId || 'N/A'})`,
+      );
+      return null;
+    }
+
+    const createInput: Prisma.TokenCreateInput = {
+      chain: normalizedChain,
+      symbol,
+      name,
+      contractAddress: normalizedAddress || '0x0000000000000000000000000000000000000000',
+      decimals: params.decimals ?? 18,
+      active: params.active ?? true,
+      metadata: {
+        ...(params.metadata || {}),
+        ensuredAt: new Date().toISOString(),
+        ensuredVia: 'TokensService.ensureTokenExists',
+      },
+    };
+
+    if (params.tokenId) {
+      createInput.id = params.tokenId;
+    }
+
+    try {
+      return await this.create(createInput);
+    } catch (error: any) {
+      // Handle race conditions where another process created the token first
+      if (error.code === 'P2002') {
+        if (params.tokenId) {
+          return await this.prisma.token.findUnique({
+            where: { id: params.tokenId },
+          });
+        }
+        if (normalizedAddress) {
+          return await this.findByAddress(normalizedChain, normalizedAddress);
+        }
+      }
+      this.logger.error(`ensureTokenExists failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Get price history for a token
    * Returns price and volume data over time for charting
    */

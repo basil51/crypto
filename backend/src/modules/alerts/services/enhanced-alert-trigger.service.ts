@@ -3,6 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { AlertType, AlertStatus } from '@prisma/client';
 import { WebSocketService } from '../../websocket/websocket.service';
 import { AlertsService } from '../alerts.service';
+import { TokensService } from '../../tokens/tokens.service';
 
 @Injectable()
 export class EnhancedAlertTriggerService {
@@ -10,6 +11,7 @@ export class EnhancedAlertTriggerService {
 
   constructor(
     private prisma: PrismaService,
+    private tokensService: TokensService,
     @Optional() @Inject(forwardRef(() => WebSocketService))
     private websocketService?: WebSocketService,
     @Optional() @Inject(forwardRef(() => AlertsService))
@@ -150,6 +152,8 @@ export class EnhancedAlertTriggerService {
           size,
           price,
           exchange,
+          tokenSymbol: metadata?.tokenSymbol,
+          tokenName: metadata?.tokenName,
           ...metadata,
         },
       });
@@ -175,6 +179,8 @@ export class EnhancedAlertTriggerService {
         tokenId,
         metadata: {
           sellWallId,
+          tokenSymbol: metadata?.tokenSymbol,
+          tokenName: metadata?.tokenName,
           ...metadata,
         },
       });
@@ -250,11 +256,63 @@ export class EnhancedAlertTriggerService {
     metadata?: any;
   }) {
     try {
+      const metadata = ((data.metadata || {}) as Record<string, any>) || {};
+      let resolvedTokenId = data.tokenId;
+
+      let token = resolvedTokenId
+        ? await this.prisma.token.findUnique({
+            where: { id: resolvedTokenId },
+          })
+        : null;
+
+      const metadataAddress =
+        metadata.contractAddress ||
+        metadata.tokenAddress ||
+        metadata.address;
+      const looksLikeAddress =
+        resolvedTokenId?.startsWith('0x') && resolvedTokenId.length === 42;
+      const candidateAddress = metadataAddress || (looksLikeAddress ? resolvedTokenId : undefined);
+
+      if (!token) {
+        try {
+          token = await this.tokensService.ensureTokenExists({
+            tokenId: resolvedTokenId,
+            chain: metadata.chain,
+            contractAddress: candidateAddress,
+            symbol: metadata.tokenSymbol || metadata.symbol,
+            name: metadata.tokenName || metadata.name,
+            decimals: metadata.decimals,
+            metadata: {
+              ...(metadata.tokenMetadata || {}),
+              source: metadata.source || 'alert-trigger',
+              alertType: data.alertType,
+            },
+          });
+        } catch (ensureError: any) {
+          this.logger.warn(
+            `Failed to ensure token for alert ${data.alertType}: ${ensureError.message}`,
+          );
+        }
+      }
+
+      if (token) {
+        resolvedTokenId = token.id;
+      }
+
+      if (!resolvedTokenId) {
+        this.logger.warn(
+          `Skipping ${data.alertType} alert for user ${data.userId}: token reference unavailable`,
+        );
+        return;
+      }
+
+      const tokenId = resolvedTokenId;
+
       // Get user's alert preferences (channels)
       const userAlerts = await this.prisma.alert.findFirst({
         where: {
           userId: data.userId,
-          tokenId: data.tokenId,
+          tokenId,
         },
         orderBy: {
           createdAt: 'desc',
@@ -271,7 +329,7 @@ export class EnhancedAlertTriggerService {
         where: {
           userId: data.userId,
           alertType: data.alertType,
-          tokenId: data.tokenId,
+          tokenId,
           status: AlertStatus.PENDING,
           createdAt: {
             gte: new Date(Date.now() - 5 * 60 * 1000), // Within last 5 minutes
@@ -290,7 +348,7 @@ export class EnhancedAlertTriggerService {
         data: {
           userId: data.userId,
           alertType: data.alertType,
-          tokenId: data.tokenId,
+          tokenId,
           signalId: data.signalId,
           channels,
           metadata: data.metadata || {},
@@ -307,7 +365,7 @@ export class EnhancedAlertTriggerService {
       });
 
       this.logger.log(
-        `Created ${data.alertType} alert for user ${data.userId}, token ${data.tokenId}`,
+        `Created ${data.alertType} alert for user ${data.userId}, token ${tokenId}`,
       );
 
       // Emit real-time notification via WebSocket

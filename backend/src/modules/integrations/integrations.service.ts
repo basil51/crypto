@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MoralisService } from './services/moralis.service';
 import { AlchemyService } from './services/alchemy.service';
+import { CovalentService } from './services/covalent.service';
+import { QuickNodeService } from './services/quicknode.service';
+import { TheGraphService } from './services/thegraph.service';
 import { CoinGeckoService } from './services/coingecko.service';
 
 @Injectable()
@@ -12,6 +15,9 @@ export class IntegrationsService {
     private configService: ConfigService,
     public readonly moralis: MoralisService,
     public readonly alchemy: AlchemyService,
+    public readonly covalent: CovalentService,
+    public readonly quicknode: QuickNodeService,
+    public readonly thegraph: TheGraphService,
     public readonly coingecko: CoinGeckoService,
   ) {}
 
@@ -34,10 +40,13 @@ export class IntegrationsService {
   /**
    * Get available providers
    */
-  getAvailableProviders(): { moralis: boolean; alchemy: boolean } {
+  getAvailableProviders(): { moralis: boolean; alchemy: boolean; covalent: boolean; quicknode: boolean; thegraph: boolean } {
     return {
       moralis: !!this.configService.get<string>('MORALIS_API_KEY'),
       alchemy: !!this.configService.get<string>('ALCHEMY_API_KEY'),
+      covalent: !!this.configService.get<string>('COVALENT_API_KEY'),
+      quicknode: !!this.configService.get<string>('QUICKNODE_API_URL'),
+      thegraph: true, // The Graph is free/public, always available
     };
   }
 }

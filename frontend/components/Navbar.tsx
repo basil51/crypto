@@ -143,12 +143,12 @@ export default function Navbar() {
               <>
                 <NotificationBell />
                 <div 
-                  className="relative pt-2"
+                  className="relative"
                   ref={userMenuRef}
                   onMouseEnter={() => setIsUserMenuOpen(true)}
                   onMouseLeave={() => setIsUserMenuOpen(false)}
                 >
-                  <div className="flex items-center gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2 cursor-pointer py-2">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
@@ -159,7 +159,8 @@ export default function Navbar() {
                   
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 top-full mt-1 w-56 bg-black/95 backdrop-blur-xl border border-purple-500/20 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full pt-1 w-56 z-50">
+                      <div className="bg-black/95 backdrop-blur-xl border border-purple-500/20 rounded-lg shadow-xl overflow-hidden">
                       <div className="py-2">
                         {/* Welcome Section */}
                         <div className="px-4 py-3 border-b border-white/10">
@@ -189,6 +190,7 @@ export default function Navbar() {
                         
                         {/* Space for future items */}
                         {/* Add more user account related items here */}
+                      </div>
                       </div>
                     </div>
                   )}

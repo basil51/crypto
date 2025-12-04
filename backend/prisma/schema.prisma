@@ -81,6 +81,7 @@ model Token {
   whaleEvents         WhaleEvent[]
   exchangeFlows       ExchangeFlow[]
   dexSwapEvents       DexSwapEvent[]
+  lpChangeEvents      LpChangeEvent[]
   tokenMetrics        TokenMetrics[]
   alerts              Alert[]
   whaleClusters       WhaleCluster[]
@@ -332,7 +333,33 @@ model DexSwapEvent {
   @@map("dex_swap_events")
 }
 
-// 13. Token Metrics table (Roadmap 2.0)
+// 13. LP Change Event table (Roadmap 4.0)
+model LpChangeEvent {
+  id            String   @id @default(uuid())
+  tokenId       String   @map("token_id")
+  dex           String // uniswap, pancakeswap, etc.
+  poolAddress   String   @map("pool_address")
+  changeType    String   @map("change_type") // mint, burn
+  amount0       Decimal  @db.Decimal(78, 0)
+  amount1       Decimal  @db.Decimal(78, 0)
+  amountUSD     Decimal? @map("amount_usd") @db.Decimal(20, 2)
+  walletAddress String?  @map("wallet_address")
+  txHash        String   @map("tx_hash")
+  blockNumber   BigInt   @map("block_number")
+  timestamp     DateTime
+  metadata      Json? // JSONB for additional details
+
+  // Relations
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, timestamp])
+  @@index([dex, timestamp])
+  @@index([changeType, timestamp])
+  @@index([txHash])
+  @@map("lp_change_events")
+}
+
+// 14. Token Metrics table (Roadmap 2.0)
 model TokenMetrics {
   id              String   @id @default(uuid())
   tokenId         String   @map("token_id")
