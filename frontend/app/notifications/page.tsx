@@ -117,6 +117,7 @@ export default function NotificationsPage() {
     { id: 'polygon', name: 'Polygon', color: 'bg-purple-600' },
     { id: 'base', name: 'Base', color: 'bg-blue-600' },
     { id: 'arbitrum', name: 'Arbitrum', color: 'bg-cyan-500' },
+    { id: 'solana', name: 'Solana', color: 'bg-gradient-to-r from-purple-400 to-pink-400' },
   ];
 
   const getChainBadge = (chainId: string | undefined) => {

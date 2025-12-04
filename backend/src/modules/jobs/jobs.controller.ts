@@ -57,6 +57,54 @@ export class JobsController {
   }
 
   /**
+   * Manually trigger Solana transaction ingestion
+   */
+  @Post('ingest-solana')
+  async triggerSolanaIngestion() {
+    await this.jobsService.ingestSolanaTransactions();
+    return {
+      success: true,
+      message: 'Solana transaction ingestion triggered',
+    };
+  }
+
+  /**
+   * Manually trigger whale event ingestion
+   */
+  @Post('ingest-whale-events')
+  async triggerWhaleEventIngestion() {
+    await this.jobsService.ingestWhaleEvents();
+    return {
+      success: true,
+      message: 'Whale event ingestion triggered',
+    };
+  }
+
+  /**
+   * Manually trigger DEX swap ingestion
+   */
+  @Post('ingest-dex-swaps')
+  async triggerDexSwapIngestion() {
+    await this.jobsService.ingestDexSwaps();
+    return {
+      success: true,
+      message: 'DEX swap ingestion triggered',
+    };
+  }
+
+  /**
+   * Manually trigger LP change ingestion
+   */
+  @Post('ingest-lp-changes')
+  async triggerLpChangeIngestion() {
+    await this.jobsService.ingestLpChanges();
+    return {
+      success: true,
+      message: 'LP change ingestion triggered',
+    };
+  }
+
+  /**
    * Get job status
    */
   @Get('status')
@@ -70,6 +118,10 @@ export class JobsController {
         discovery: 'Every 15 minutes',
         broadMonitoring: 'Every 30 minutes',
         positionUpdates: 'Every hour',
+        whaleEvents: 'Every 15 minutes',
+        dexSwaps: 'Every 20 minutes',
+        lpChanges: 'Every 30 minutes',
+        solanaTransactions: 'Every 10 minutes',
       },
     };
   }

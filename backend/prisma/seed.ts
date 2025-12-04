@@ -126,6 +126,33 @@ async function main() {
       active: true,
       metadata: { coingeckoId: 'binance-usd' },
     },
+    {
+      chain: 'solana',
+      symbol: 'SOL',
+      name: 'Solana',
+      contractAddress: 'So11111111111111111111111111111111111111112', // Wrapped SOL mint address
+      decimals: 9,
+      active: true,
+      metadata: { coingeckoId: 'solana' },
+    },
+    {
+      chain: 'solana',
+      symbol: 'USDC',
+      name: 'USD Coin (Solana)',
+      contractAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC on Solana
+      decimals: 6,
+      active: true,
+      metadata: { coingeckoId: 'usd-coin', solanaMint: true },
+    },
+    {
+      chain: 'solana',
+      symbol: 'USDT',
+      name: 'Tether USD (Solana)',
+      contractAddress: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT on Solana
+      decimals: 6,
+      active: true,
+      metadata: { coingeckoId: 'tether', solanaMint: true },
+    },
   ];
 
   const createdTokens = [];
